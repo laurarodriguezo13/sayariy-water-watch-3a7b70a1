@@ -10,19 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProyectoRouteImport } from './routes/proyecto'
-import { Route as ContactoRouteImport } from './routes/contacto'
-import { Route as ComunidadesRouteImport } from './routes/comunidades'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as CampoRouteImport } from './routes/campo'
 import { Route as PozosRouteImport } from './routes/pozos'
 import { Route as CultivosRouteImport } from './routes/cultivos'
+import { Route as ContactoRouteImport } from './routes/contacto'
+import { Route as ComunidadesRouteImport } from './routes/comunidades'
+import { Route as CampoRouteImport } from './routes/campo'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardAlertasRouteImport } from './routes/dashboard.alertas'
 import { Route as DashboardComunidadIdRouteImport } from './routes/dashboard.comunidad.$id'
 
-const CampoRoute = CampoRouteImport.update({
-  id: '/campo',
-  path: '/campo',
+const ProyectoRoute = ProyectoRouteImport.update({
+  id: '/proyecto',
+  path: '/proyecto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PozosRoute = PozosRouteImport.update({
@@ -35,11 +35,6 @@ const CultivosRoute = CultivosRouteImport.update({
   path: '/cultivos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProyectoRoute = ProyectoRouteImport.update({
-  id: '/proyecto',
-  path: '/proyecto',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ContactoRoute = ContactoRouteImport.update({
   id: '/contacto',
   path: '/contacto',
@@ -48,6 +43,11 @@ const ContactoRoute = ContactoRouteImport.update({
 const ComunidadesRoute = ComunidadesRouteImport.update({
   id: '/comunidades',
   path: '/comunidades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampoRoute = CampoRouteImport.update({
+  id: '/campo',
+  path: '/campo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -74,10 +74,10 @@ const DashboardComunidadIdRoute = DashboardComunidadIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/campo': typeof CampoRoute
-  '/pozos': typeof PozosRoute
-  '/cultivos': typeof CultivosRoute
   '/comunidades': typeof ComunidadesRoute
   '/contacto': typeof ContactoRoute
+  '/cultivos': typeof CultivosRoute
+  '/pozos': typeof PozosRoute
   '/proyecto': typeof ProyectoRoute
   '/dashboard/alertas': typeof DashboardAlertasRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -86,10 +86,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/campo': typeof CampoRoute
-  '/pozos': typeof PozosRoute
-  '/cultivos': typeof CultivosRoute
   '/comunidades': typeof ComunidadesRoute
   '/contacto': typeof ContactoRoute
+  '/cultivos': typeof CultivosRoute
+  '/pozos': typeof PozosRoute
   '/proyecto': typeof ProyectoRoute
   '/dashboard/alertas': typeof DashboardAlertasRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -99,10 +99,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/campo': typeof CampoRoute
-  '/pozos': typeof PozosRoute
-  '/cultivos': typeof CultivosRoute
   '/comunidades': typeof ComunidadesRoute
   '/contacto': typeof ContactoRoute
+  '/cultivos': typeof CultivosRoute
+  '/pozos': typeof PozosRoute
   '/proyecto': typeof ProyectoRoute
   '/dashboard/alertas': typeof DashboardAlertasRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -113,10 +113,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/campo'
-    | '/pozos'
-    | '/cultivos'
     | '/comunidades'
     | '/contacto'
+    | '/cultivos'
+    | '/pozos'
     | '/proyecto'
     | '/dashboard/alertas'
     | '/dashboard/'
@@ -125,10 +125,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/campo'
-    | '/pozos'
-    | '/cultivos'
     | '/comunidades'
     | '/contacto'
+    | '/cultivos'
+    | '/pozos'
     | '/proyecto'
     | '/dashboard/alertas'
     | '/dashboard'
@@ -137,10 +137,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/campo'
-    | '/pozos'
-    | '/cultivos'
     | '/comunidades'
     | '/contacto'
+    | '/cultivos'
+    | '/pozos'
     | '/proyecto'
     | '/dashboard/alertas'
     | '/dashboard/'
@@ -150,10 +150,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CampoRoute: typeof CampoRoute
-  PozosRoute: typeof PozosRoute
-  CultivosRoute: typeof CultivosRoute
   ComunidadesRoute: typeof ComunidadesRoute
   ContactoRoute: typeof ContactoRoute
+  CultivosRoute: typeof CultivosRoute
+  PozosRoute: typeof PozosRoute
   ProyectoRoute: typeof ProyectoRoute
   DashboardAlertasRoute: typeof DashboardAlertasRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -169,6 +169,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProyectoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pozos': {
+      id: '/pozos'
+      path: '/pozos'
+      fullPath: '/pozos'
+      preLoaderRoute: typeof PozosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cultivos': {
+      id: '/cultivos'
+      path: '/cultivos'
+      fullPath: '/cultivos'
+      preLoaderRoute: typeof CultivosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contacto': {
       id: '/contacto'
       path: '/contacto'
@@ -181,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/comunidades'
       fullPath: '/comunidades'
       preLoaderRoute: typeof ComunidadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campo': {
+      id: '/campo'
+      path: '/campo'
+      fullPath: '/campo'
+      preLoaderRoute: typeof CampoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -211,37 +232,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardComunidadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/campo': {
-      id: '/campo'
-      path: '/campo'
-      fullPath: '/campo'
-      preLoaderRoute: typeof CampoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pozos': {
-      id: '/pozos'
-      path: '/pozos'
-      fullPath: '/pozos'
-      preLoaderRoute: typeof PozosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cultivos': {
-      id: '/cultivos'
-      path: '/cultivos'
-      fullPath: '/cultivos'
-      preLoaderRoute: typeof CultivosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CampoRoute: CampoRoute,
-  PozosRoute: PozosRoute,
-  CultivosRoute: CultivosRoute,
   ComunidadesRoute: ComunidadesRoute,
   ContactoRoute: ContactoRoute,
+  CultivosRoute: CultivosRoute,
+  PozosRoute: PozosRoute,
   ProyectoRoute: ProyectoRoute,
   DashboardAlertasRoute: DashboardAlertasRoute,
   DashboardIndexRoute: DashboardIndexRoute,
@@ -250,13 +250,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

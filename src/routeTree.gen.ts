@@ -13,6 +13,9 @@ import { Route as ProyectoRouteImport } from './routes/proyecto'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardAlertasRouteImport } from './routes/dashboard.alertas'
+import { Route as DashboardComunidadIdRouteImport } from './routes/dashboard.comunidad.$id'
 
 const ProyectoRoute = ProyectoRouteImport.update({
   id: '/proyecto',
@@ -34,18 +37,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardAlertasRoute = DashboardAlertasRouteImport.update({
+  id: '/dashboard/alertas',
+  path: '/dashboard/alertas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardComunidadIdRoute = DashboardComunidadIdRouteImport.update({
+  id: '/dashboard/comunidad/$id',
+  path: '/dashboard/comunidad/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/comunidades': typeof ComunidadesRoute
   '/contacto': typeof ContactoRoute
   '/proyecto': typeof ProyectoRoute
+  '/dashboard/alertas': typeof DashboardAlertasRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/comunidad/$id': typeof DashboardComunidadIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/comunidades': typeof ComunidadesRoute
   '/contacto': typeof ContactoRoute
   '/proyecto': typeof ProyectoRoute
+  '/dashboard/alertas': typeof DashboardAlertasRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/comunidad/$id': typeof DashboardComunidadIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +77,38 @@ export interface FileRoutesById {
   '/comunidades': typeof ComunidadesRoute
   '/contacto': typeof ContactoRoute
   '/proyecto': typeof ProyectoRoute
+  '/dashboard/alertas': typeof DashboardAlertasRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/comunidad/$id': typeof DashboardComunidadIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/comunidades' | '/contacto' | '/proyecto'
+  fullPaths:
+    | '/'
+    | '/comunidades'
+    | '/contacto'
+    | '/proyecto'
+    | '/dashboard/alertas'
+    | '/dashboard/'
+    | '/dashboard/comunidad/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/comunidades' | '/contacto' | '/proyecto'
-  id: '__root__' | '/' | '/comunidades' | '/contacto' | '/proyecto'
+  to:
+    | '/'
+    | '/comunidades'
+    | '/contacto'
+    | '/proyecto'
+    | '/dashboard/alertas'
+    | '/dashboard'
+    | '/dashboard/comunidad/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/comunidades'
+    | '/contacto'
+    | '/proyecto'
+    | '/dashboard/alertas'
+    | '/dashboard/'
+    | '/dashboard/comunidad/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +116,9 @@ export interface RootRouteChildren {
   ComunidadesRoute: typeof ComunidadesRoute
   ContactoRoute: typeof ContactoRoute
   ProyectoRoute: typeof ProyectoRoute
+  DashboardAlertasRoute: typeof DashboardAlertasRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardComunidadIdRoute: typeof DashboardComunidadIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +151,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/alertas': {
+      id: '/dashboard/alertas'
+      path: '/dashboard/alertas'
+      fullPath: '/dashboard/alertas'
+      preLoaderRoute: typeof DashboardAlertasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/comunidad/$id': {
+      id: '/dashboard/comunidad/$id'
+      path: '/dashboard/comunidad/$id'
+      fullPath: '/dashboard/comunidad/$id'
+      preLoaderRoute: typeof DashboardComunidadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +180,9 @@ const rootRouteChildren: RootRouteChildren = {
   ComunidadesRoute: ComunidadesRoute,
   ContactoRoute: ContactoRoute,
   ProyectoRoute: ProyectoRoute,
+  DashboardAlertasRoute: DashboardAlertasRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardComunidadIdRoute: DashboardComunidadIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

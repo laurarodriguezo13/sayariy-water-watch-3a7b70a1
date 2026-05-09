@@ -13,10 +13,16 @@ import { Route as ProyectoRouteImport } from './routes/proyecto'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CampoRouteImport } from './routes/campo'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardAlertasRouteImport } from './routes/dashboard.alertas'
 import { Route as DashboardComunidadIdRouteImport } from './routes/dashboard.comunidad.$id'
 
+const CampoRoute = CampoRouteImport.update({
+  id: '/campo',
+  path: '/campo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProyectoRoute = ProyectoRouteImport.update({
   id: '/proyecto',
   path: '/proyecto',
@@ -55,6 +61,7 @@ const DashboardComunidadIdRoute = DashboardComunidadIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/campo': typeof CampoRoute
   '/comunidades': typeof ComunidadesRoute
   '/contacto': typeof ContactoRoute
   '/proyecto': typeof ProyectoRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/campo': typeof CampoRoute
   '/comunidades': typeof ComunidadesRoute
   '/contacto': typeof ContactoRoute
   '/proyecto': typeof ProyectoRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/campo': typeof CampoRoute
   '/comunidades': typeof ComunidadesRoute
   '/contacto': typeof ContactoRoute
   '/proyecto': typeof ProyectoRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/campo'
     | '/comunidades'
     | '/contacto'
     | '/proyecto'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/campo'
     | '/comunidades'
     | '/contacto'
     | '/proyecto'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/campo'
     | '/comunidades'
     | '/contacto'
     | '/proyecto'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CampoRoute: typeof CampoRoute
   ComunidadesRoute: typeof ComunidadesRoute
   ContactoRoute: typeof ContactoRoute
   ProyectoRoute: typeof ProyectoRoute
@@ -172,11 +185,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardComunidadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/campo': {
+      id: '/campo'
+      path: '/campo'
+      fullPath: '/campo'
+      preLoaderRoute: typeof CampoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CampoRoute: CampoRoute,
   ComunidadesRoute: ComunidadesRoute,
   ContactoRoute: ContactoRoute,
   ProyectoRoute: ProyectoRoute,

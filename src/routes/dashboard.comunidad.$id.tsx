@@ -10,7 +10,10 @@ import {
   Legend,
 } from "recharts";
 import { SiteShell } from "@/components/site-shell";
-import { ALERTS, getCommunity, mockTimeSeries, riskColor } from "@/lib/communities";
+import { riskColor } from "@/lib/communities";
+import { useTimeseries } from "@/hooks/use-cropguard";
+import { useCommunities } from "@/hooks/use-cropguard";
+import type { Community } from "@/lib/cropguard-api";
 
 export const Route = createFileRoute("/dashboard/comunidad/$id")({
   head: ({ params }) => ({
@@ -22,40 +25,51 @@ export const Route = createFileRoute("/dashboard/comunidad/$id")({
       },
     ],
   }),
-  loader: ({ params }) => {
-    const community = getCommunity(params.id);
-    if (!community) throw notFound();
-    return { community };
-  },
-  notFoundComponent: NotFound,
-  errorComponent: ({ error }) => (
-    <SiteShell>
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold text-foreground">No se pudo cargar la comunidad</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
-      </div>
-    </SiteShell>
-  ),
   component: ComunidadDetail,
 });
 
-function NotFound() {
-  return (
-    <SiteShell>
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold text-foreground">Comunidad no encontrada</h1>
-        <Link to="/comunidades" className="mt-4 inline-block text-primary hover:underline">
-          Volver a comunidades
-        </Link>
-      </div>
-    </SiteShell>
-  );
+function statusToRisk(status: Community["status"]): "bajo" | "medio" | "alto" {
+  if (status === "alert") return "alto";
+  if (status === "watch") return "medio";
+  return "bajo";
 }
 
 function ComunidadDetail() {
-  const { community } = Route.useLoaderData();
-  const series = mockTimeSeries(community.name.length);
-  const alerts = ALERTS.filter((a) => a.communityId === community.id);
+  const { id } = Route.useParams();
+  const { data: communities, isLoading } = useCommunities();
+  const { data: series } = useTimeseries(id);
+
+  if (isLoading) {
+    return (
+      <SiteShell>
+        <div className="mx-auto max-w-6xl px-4 py-16 text-center text-sm text-muted-foreground animate-pulse">
+          Cargando datos de la comunidad…
+        </div>
+      </SiteShell>
+    );
+  }
+
+  const community = communities?.find((c) => c.id === id);
+  if (!community) {
+    return (
+      <SiteShell>
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <h1 className="text-2xl font-bold text-foreground">Comunidad no encontrada</h1>
+          <Link to="/comunidades" className="mt-4 inline-block text-primary hover:underline">
+            Volver a comunidades
+          </Link>
+        </div>
+      </SiteShell>
+    );
+  }
+
+  const risk = statusToRisk(community.status);
+  const chartData = (series ?? []).map((p) => ({
+    week: p.date.slice(5), // MM-DD
+    NDVI: p.ndvi,
+    NDWI: p.ndwi,
+    "Estrés": +(p.stress_prob * 100).toFixed(0),
+  }));
 
   return (
     <SiteShell>
@@ -68,8 +82,8 @@ function ComunidadDetail() {
             <h1 className="text-3xl font-bold tracking-tight text-foreground">{community.name}</h1>
             <p className="text-sm text-muted-foreground">{community.province}</p>
           </div>
-          <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${riskColor(community.risk)}`}>
-            riesgo {community.risk}
+          <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${riskColor(risk)}`}>
+            riesgo {risk}
           </span>
         </div>
 
@@ -81,53 +95,39 @@ function ComunidadDetail() {
 
         <div className="mt-10 rounded-xl border border-border/60 bg-card p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-foreground">Series temporales (12 semanas)</h2>
+            <h2 className="text-base font-semibold text-foreground">Series temporales</h2>
             <span className="text-xs text-muted-foreground">
-              Prob. de estrés a 2–4 sem: {Math.round(community.stressProbability * 100)}%
+              Prob. de estrés actual: {Math.round(community.stress_probability * 100)}%
             </span>
           </div>
-          <div className="h-72 w-full">
-            <ResponsiveContainer>
-              <RLineChart data={series} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="week" stroke="var(--color-muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="NDVI" stroke="var(--color-chart-3)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="NDWI" stroke="var(--color-chart-4)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="EVI" stroke="var(--color-chart-2)" strokeWidth={2} dot={false} />
-              </RLineChart>
-            </ResponsiveContainer>
-          </div>
+          {chartData.length > 0 ? (
+            <div className="h-72 w-full">
+              <ResponsiveContainer>
+                <RLineChart data={chartData} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="week" stroke="var(--color-muted-foreground)" fontSize={10} interval={4} />
+                  <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--color-card)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Line type="monotone" dataKey="NDVI" stroke="var(--color-chart-3)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="NDWI" stroke="var(--color-chart-4)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="Estrés" stroke="var(--color-chart-1)" strokeWidth={2} dot={false} yAxisId={1} />
+                </RLineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-40 flex items-center justify-center text-sm text-muted-foreground animate-pulse">
+              Cargando series…
+            </div>
+          )}
         </div>
-
-        <h2 className="mt-12 text-xl font-semibold text-foreground">Alertas</h2>
-        {alerts.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">Sin alertas activas para esta comunidad.</p>
-        ) : (
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {alerts.map((a) => (
-              <article key={a.id} className="rounded-xl border border-border/60 bg-card p-5">
-                <div className="flex items-center justify-between">
-                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${riskColor(a.level)}`}>
-                    riesgo {a.level}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{a.date}</span>
-                </div>
-                <h3 className="mt-3 text-base font-semibold text-foreground">{a.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{a.message}</p>
-              </article>
-            ))}
-          </div>
-        )}
       </section>
     </SiteShell>
   );

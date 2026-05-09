@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Sayariy Water Watch + Corp Guard" },
+      { name: "description", content: "Predictive water management system for Sayariy Peru using ML and satellite data." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Sayariy Water Watch + Corp Guard" },
+      { property: "og:description", content: "Predictive water management system for Sayariy Peru using ML and satellite data." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Sayariy Water Watch + Corp Guard" },
+      { name: "twitter:description", content: "Predictive water management system for Sayariy Peru using ML and satellite data." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/XTxS1EjPEdUcsgwnvrKR3AMyMxI3/social-images/social-1778345434923-logo-cabecera-retina.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/XTxS1EjPEdUcsgwnvrKR3AMyMxI3/social-images/social-1778345434923-logo-cabecera-retina.webp" },
     ],
     links: [
       {

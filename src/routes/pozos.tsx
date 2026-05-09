@@ -1,15 +1,20 @@
 /**
  * /pozos — Estado del pozo de agua, para trabajadores de campo.
  *
- * Sin jerga técnica. Muestra:
- * - Nivel del pozo en barra visual
- * - ¿Cuántos días de agua queda?
- * - Lluvia esperada esta semana
- * - ¿Hay que regar hoy?
+ * Secciones:
+ * 1. Encabezado
+ * 2. WellCard — nivel del pozo con indicador grande
+ * 3. IrrigationCard — ¿hay que regar hoy?
+ * 4. EnsoCard (completo) — cómo el clima afecta el pozo
+ * 5. ForecastChart — lluvia vs evaporación 7 días
+ * 6. RainCard — barras de lluvia diaria
+ * 7. TipsCard — consejos para ahorrar agua
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
-import { useWell, useForecast, useIrrigation } from "@/hooks/use-cropguard";
+import { EnsoCard } from "@/components/enso-card";
+import { ForecastChart } from "@/components/forecast-chart";
+import { useWell, useForecast, useIrrigation, useEnso } from "@/hooks/use-cropguard";
 import type { ForecastDay } from "@/lib/cropguard-api";
 
 export const Route = createFileRoute("/pozos")({
@@ -199,19 +204,22 @@ function PozosPage() {
   const { data: well, isLoading: wellLoading } = useWell();
   const { data: forecast, isLoading: fcLoading } = useForecast();
   const { data: irrigation, isLoading: irrLoading } = useIrrigation();
+  const { data: enso, isLoading: ensoLoading } = useEnso();
 
   const pct = well?.pct_capacity ?? 50;
 
   return (
     <SiteShell>
       <section className="mx-auto max-w-lg px-4 py-8 space-y-5">
+        {/* 1. Page header */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Agua</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
-            Estado del pozo
+            Estado del pozo de agua
           </h1>
         </div>
 
+        {/* 2. WellCard */}
         {wellLoading ? (
           <Skeleton className="h-64 w-full" />
         ) : well?.available ? (
@@ -222,18 +230,48 @@ function PozosPage() {
           </div>
         )}
 
+        {/* 3. IrrigationCard */}
         {irrLoading ? (
           <Skeleton className="h-28 w-full" />
         ) : irrigation ? (
           <IrrigationCard emoji={irrigation.emoji ?? "💧"} text={irrigation.text_es} />
         ) : null}
 
+        {/* 4. EnsoCard — full */}
+        <div>
+          <p className="mb-2 text-sm font-semibold text-muted-foreground">
+            El estado del clima afecta el nivel del pozo
+          </p>
+          {ensoLoading ? (
+            <Skeleton className="h-32 w-full" />
+          ) : enso ? (
+            <EnsoCard
+              icen_anom={enso.icen.anom_c}
+              icen_label={enso.icen.label_es}
+              icen_state={enso.icen.state}
+              risk_es={enso.icen.risk_es}
+              oni_anom={enso.oni.anom_c}
+              oni_state={enso.oni.state}
+              compact={false}
+            />
+          ) : null}
+        </div>
+
+        {/* 5. ForecastChart */}
+        {fcLoading ? (
+          <Skeleton className="h-64 w-full" />
+        ) : (
+          <ForecastChart days={forecast} />
+        )}
+
+        {/* 6. RainCard */}
         {fcLoading ? (
           <Skeleton className="h-56 w-full" />
         ) : forecast ? (
           <RainCard days={forecast} />
         ) : null}
 
+        {/* 7. TipsCard */}
         {!wellLoading && <TipsCard pct={pct} />}
 
         <p className="text-center text-xs text-muted-foreground pb-4">

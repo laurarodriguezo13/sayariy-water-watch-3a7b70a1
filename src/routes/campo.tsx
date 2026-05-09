@@ -3,9 +3,10 @@
  *
  * Pensada para usar en el celular desde el terreno:
  * - Semáforo grande (verde / amarillo / rojo)
+ * - Estado ICEN compacto (El Niño Costero)
  * - Barra del pozo (cuánta agua hay)
- * - Pronóstico del tiempo 7 días en emojis
  * - ¿Hay que regar hoy? (sí / no / solo lo esencial)
+ * - Pronóstico del tiempo 7 días en emojis
  * - Avisos importantes
  * - ¿Qué plantar y qué cuidar?
  *
@@ -13,6 +14,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
+import { EnsoCard } from "@/components/enso-card";
 import {
   useStatus,
   useWell,
@@ -20,6 +22,7 @@ import {
   useIrrigation,
   useAlerts,
   useCrops,
+  useEnso,
 } from "@/hooks/use-cropguard";
 import type { Alert, CropRec, ForecastDay, Risk } from "@/lib/cropguard-api";
 
@@ -234,6 +237,7 @@ function CampoPage() {
   const irrigation = useIrrigation();
   const alerts = useAlerts();
   const crops = useCrops();
+  const enso = useEnso();
 
   return (
     <SiteShell>
@@ -259,6 +263,21 @@ function CampoPage() {
         ) : (
           <TrafficLightHero light="amarillo" summary="No se pudo conectar con el servidor." />
         )}
+
+        {/* ENSO compact card */}
+        {enso.isLoading ? (
+          <Skeleton className="h-20 w-full" />
+        ) : enso.data ? (
+          <EnsoCard
+            icen_anom={enso.data.icen.anom_c}
+            icen_label={enso.data.icen.label_es}
+            icen_state={enso.data.icen.state}
+            risk_es={enso.data.icen.risk_es}
+            oni_anom={enso.data.oni.anom_c}
+            oni_state={enso.data.oni.state}
+            compact={true}
+          />
+        ) : null}
 
         {/* Well gauge */}
         {well.isLoading ? (

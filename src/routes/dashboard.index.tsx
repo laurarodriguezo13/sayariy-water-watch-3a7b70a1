@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, MapPin, TrendingDown, Activity } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
+import { CommunityMap } from "@/components/community-map";
 import { riskColor } from "@/lib/communities";
 import { useCommunities, useAlerts, useEnso } from "@/hooks/use-cropguard";
-import type { Community } from "@/lib/cropguard-api";
 
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({
@@ -19,12 +19,6 @@ export const Route = createFileRoute("/dashboard/")({
   component: DashboardHome,
 });
 
-function statusToRisk(status: Community["status"]): "bajo" | "medio" | "alto" {
-  if (status === "alert") return "alto";
-  if (status === "watch") return "medio";
-  return "bajo";
-}
-
 function DashboardHome() {
   const { data: communities, isLoading: commLoading } = useCommunities();
   const { data: alerts, isLoading: alertsLoading } = useAlerts();
@@ -39,6 +33,7 @@ function DashboardHome() {
   return (
     <SiteShell>
       <section className="mx-auto max-w-6xl px-4 py-12">
+        {/* Header with ICEN chip */}
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">Panel</p>
@@ -64,64 +59,39 @@ function DashboardHome() {
           </div>
         </div>
 
+        {/* 4 KPI cards */}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi icon={<MapPin className="h-5 w-5" />} label="Comunidades" value={communities ? String(communities.length) : "—"} />
-          <Kpi icon={<TrendingDown className="h-5 w-5" />} label="En riesgo alto" value={commLoading ? "…" : String(highRisk)} tone="danger" />
-          <Kpi icon={<Activity className="h-5 w-5" />} label="NDVI promedio" value={commLoading ? "…" : avgNdvi} tone="success" />
-          <Kpi icon={<Bell className="h-5 w-5" />} label="Alertas activas" value={alertsLoading ? "…" : String(activeAlerts)} tone="accent" />
+          <Kpi
+            icon={<MapPin className="h-5 w-5" />}
+            label="Comunidades"
+            value={communities ? String(communities.length) : "—"}
+          />
+          <Kpi
+            icon={<TrendingDown className="h-5 w-5" />}
+            label="En riesgo alto"
+            value={commLoading ? "…" : String(highRisk)}
+            tone="danger"
+          />
+          <Kpi
+            icon={<Activity className="h-5 w-5" />}
+            label="NDVI promedio"
+            value={commLoading ? "…" : avgNdvi}
+            tone="success"
+          />
+          <Kpi
+            icon={<Bell className="h-5 w-5" />}
+            label="Alertas activas"
+            value={alertsLoading ? "…" : String(activeAlerts)}
+            tone="accent"
+          />
         </div>
 
-        <h2 className="mt-12 text-xl font-semibold text-foreground">Comunidades</h2>
-        <div className="mt-4 overflow-hidden rounded-xl border border-border/60">
-          {commLoading ? (
-            <div className="p-8 text-center text-sm text-muted-foreground animate-pulse">
-              Cargando datos del modelo…
-            </div>
-          ) : (
-            <table className="w-full text-left text-sm">
-              <thead className="bg-secondary/60 text-xs uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3">Comunidad</th>
-                  <th className="px-4 py-3">NDVI</th>
-                  <th className="px-4 py-3">NDWI</th>
-                  <th className="px-4 py-3">EVI</th>
-                  <th className="px-4 py-3">Prob. estrés</th>
-                  <th className="px-4 py-3">Riesgo</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60 bg-card">
-                {(communities ?? []).map((c) => {
-                  const risk = statusToRisk(c.status);
-                  return (
-                    <tr key={c.id} className="hover:bg-secondary/40">
-                      <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
-                      <td className="px-4 py-3 tabular-nums">{c.ndvi.toFixed(2)}</td>
-                      <td className="px-4 py-3 tabular-nums">{c.ndwi.toFixed(2)}</td>
-                      <td className="px-4 py-3 tabular-nums">{c.evi.toFixed(2)}</td>
-                      <td className="px-4 py-3 tabular-nums">{Math.round(c.stress_probability * 100)}%</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${riskColor(risk)}`}>
-                          {risk}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Link
-                          to="/dashboard/comunidad/$id"
-                          params={{ id: c.id }}
-                          className="text-xs font-semibold text-primary hover:underline"
-                        >
-                          Detalle →
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
+        {/* CommunityMap replacing the old table */}
+        <div className="mt-12">
+          <CommunityMap communities={commLoading ? null : communities} />
         </div>
 
+        {/* Alertas recientes */}
         <h2 className="mt-12 text-xl font-semibold text-foreground">Alertas recientes</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {alertsLoading ? (

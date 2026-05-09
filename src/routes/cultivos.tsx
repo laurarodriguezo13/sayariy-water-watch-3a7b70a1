@@ -1,15 +1,18 @@
 /**
  * /cultivos — Estado de los cultivos, para trabajadores de campo.
  *
- * Sin índices técnicos ni jerga. Muestra:
- * - Estado de salud de cada comunidad en colores simples
- * - Qué plantar y qué cuidar según el ICEN / El Niño actual
- * - Consejos prácticos por cultivo
+ * Secciones:
+ * 1. Encabezado de página
+ * 2. EnsoCard (completo) — solo si estado != Normal
+ * 3. CommunityMap — mapa de comunidades monitoreadas
+ * 4. Recomendaciones de cultivo (¿Qué plantar y qué cuidar ahora?)
  */
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
+import { EnsoCard } from "@/components/enso-card";
+import { CommunityMap } from "@/components/community-map";
 import { useCommunities, useCrops, useEnso } from "@/hooks/use-cropguard";
-import type { Community, CropRec } from "@/lib/cropguard-api";
+import type { CropRec } from "@/lib/cropguard-api";
 
 export const Route = createFileRoute("/cultivos")({
   head: () => ({
@@ -26,79 +29,6 @@ export const Route = createFileRoute("/cultivos")({
 
 function Skeleton({ className }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-secondary/60 ${className ?? "h-24 w-full"}`} />;
-}
-
-// ── Community health card ──────────────────────────────────────────────────────
-
-function communityLabel(c: Community): { emoji: string; text: string; bg: string } {
-  if (c.status === "alert" || c.stress_probability > 0.6) {
-    return { emoji: "🔴", text: "Cultivos en estrés — actúe ahora", bg: "bg-red-50 border-red-200" };
-  }
-  if (c.status === "watch" || c.stress_probability > 0.4) {
-    return { emoji: "🟡", text: "Monitoree esta semana", bg: "bg-amber-50 border-amber-200" };
-  }
-  return { emoji: "🟢", text: "Cultivos sanos", bg: "bg-green-50 border-green-200" };
-}
-
-function CommunityCard({ c }: { c: Community }) {
-  const label = communityLabel(c);
-  return (
-    <Link
-      to="/dashboard/comunidad/$id"
-      params={{ id: c.id }}
-      className={`block rounded-xl border p-4 transition hover:brightness-95 ${label.bg}`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="font-bold text-foreground text-lg">{c.name}</div>
-        <span className="text-2xl">{label.emoji}</span>
-      </div>
-      <p className="mt-1 text-sm text-muted-foreground">{label.text}</p>
-      <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-        <span>Vegetación: <strong>{ndviLabel(c.ndvi)}</strong></span>
-        <span>Humedad: <strong>{ndwiLabel(c.ndwi)}</strong></span>
-      </div>
-    </Link>
-  );
-}
-
-function ndviLabel(v: number): string {
-  if (v >= 0.55) return "buena";
-  if (v >= 0.35) return "regular";
-  return "baja";
-}
-function ndwiLabel(v: number): string {
-  if (v >= 0.10) return "buena";
-  if (v >= -0.05) return "regular";
-  return "seca";
-}
-
-// ── ENSO context banner ───────────────────────────────────────────────────────
-
-function EnsoBanner({
-  label,
-  anom,
-  risk,
-}: {
-  label: string;
-  anom: number;
-  risk: string;
-}) {
-  const active = label !== "Normal";
-  if (!active) return null;
-  return (
-    <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-5">
-      <div className="flex items-center gap-3 mb-2">
-        <span className="text-3xl">🌊</span>
-        <div>
-          <div className="font-bold text-amber-900 text-lg">El Niño Costero activo</div>
-          <div className="text-sm text-amber-800">
-            ICEN {anom > 0 ? "+" : ""}{anom.toFixed(2)}°C — {label}
-          </div>
-        </div>
-      </div>
-      <p className="text-sm text-amber-900 leading-relaxed">{risk}</p>
-    </div>
-  );
 }
 
 // ── Crop recommendation card ──────────────────────────────────────────────────
@@ -132,11 +62,14 @@ function CropRecCard({ rec }: { rec: CropRec }) {
 function CultivosPage() {
   const { data: communities, isLoading: commLoading } = useCommunities();
   const { data: crops, isLoading: cropsLoading } = useCrops();
-  const { data: enso } = useEnso();
+  const { data: enso, isLoading: ensoLoading } = useEnso();
+
+  const showEnso = !ensoLoading && enso && enso.icen.state !== "Normal";
 
   return (
     <SiteShell>
-      <section className="mx-auto max-w-lg px-4 py-8 space-y-5">
+      <section className="mx-auto max-w-2xl px-4 py-8 space-y-5">
+        {/* 1. Page header */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Cultivos</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
@@ -144,39 +77,36 @@ function CultivosPage() {
           </h1>
         </div>
 
-        {/* ENSO context */}
-        {enso && (
-          <EnsoBanner
-            label={enso.icen.label_es}
-            anom={enso.icen.anom_c}
-            risk={enso.icen.risk_es}
+        {/* 2. EnsoCard — only when state != Normal */}
+        {ensoLoading ? (
+          <Skeleton className="h-32 w-full" />
+        ) : showEnso ? (
+          <EnsoCard
+            icen_anom={enso!.icen.anom_c}
+            icen_label={enso!.icen.label_es}
+            icen_state={enso!.icen.state}
+            risk_es={enso!.icen.risk_es}
+            oni_anom={enso!.oni.anom_c}
+            oni_state={enso!.oni.state}
+            compact={false}
           />
-        )}
+        ) : null}
 
-        {/* Community health */}
-        <div>
-          <h2 className="text-lg font-bold text-foreground mb-3">
-            🗺️ Comunidades monitoreadas
-          </h2>
-          {commLoading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {(communities ?? []).map((c) => (
-                <CommunityCard key={c.id} c={c} />
+        {/* 3. CommunityMap */}
+        {commLoading ? (
+          <div className="rounded-2xl border border-border/60 bg-card p-5">
+            <h2 className="mb-4 text-lg font-bold text-foreground">🗺️ Comunidades monitoreadas</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse rounded-xl border border-border/60 bg-card p-4 h-24" />
               ))}
             </div>
-          )}
-          <p className="mt-2 text-xs text-muted-foreground text-center">
-            Toque una comunidad para ver el detalle histórico →
-          </p>
-        </div>
+          </div>
+        ) : (
+          <CommunityMap communities={communities} />
+        )}
 
-        {/* Crop recommendations */}
+        {/* 4. Crop recommendations */}
         <div>
           <h2 className="text-lg font-bold text-foreground mb-3">
             🌿 ¿Qué plantar y qué cuidar ahora?

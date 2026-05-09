@@ -9,7 +9,8 @@
  */
 
 const BASE =
-  (import.meta.env.VITE_CROPGUARD_API_URL as string | undefined) ?? "";
+  (import.meta.env.VITE_CROPGUARD_API_URL as string | undefined) ??
+  "https://cropguard-0k17.onrender.com";
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}/api/v1${path}`);

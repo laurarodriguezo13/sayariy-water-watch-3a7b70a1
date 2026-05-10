@@ -12,10 +12,11 @@
  *
  * Sin números técnicos, sin ejes, sin jerga.
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
 import { EnsoCard } from "@/components/enso-card";
 import { FieldNews } from "@/components/field-news";
+import { ReportDownloadButton } from "@/components/report-download-button";
 import {
   useStatus,
   useWell,
@@ -25,16 +26,16 @@ import {
   useCrops,
   useEnso,
 } from "@/hooks/use-cropguard";
-import type { Alert, CropRec, ForecastDay, Risk } from "@/lib/cropguard-api";
+import type { Alert, CropRec, EnsoData, ForecastDay, Risk, StatusData } from "@/lib/cropguard-api";
 
 export const Route = createFileRoute("/campo")({
   head: () => ({
     meta: [
-      { title: "Vista de Campo — Sayariy CropGuard" },
+      { title: "Vista Simple — Sayariy CropGuard" },
       {
         name: "description",
         content:
-          "Información esencial para trabajadores de campo: estado del pozo, riego y avisos en lenguaje claro.",
+          "Vista simple para agricultores: estado del día, agua del pozo, clima y avisos en lenguaje claro.",
       },
     ],
   }),

@@ -11,12 +11,14 @@ import type {
   WellData,
   Alert,
   TimeseriesPoint,
+  RainHistoryDay,
 } from "@/lib/cropguard-api";
 
 export interface ReportData {
   status?: StatusData;
   well?: WellData;
   forecast?: ForecastDay[];
+  rainHistory?: RainHistoryDay[];
   irrigation?: IrrigationRec;
   enso?: EnsoData;
   crops?: CropRec[];

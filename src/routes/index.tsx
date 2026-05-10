@@ -65,11 +65,17 @@ function HomePage() {
               className="aspect-[4/3] w-full rounded-2xl border border-border/60 p-1"
               style={{ background: "var(--gradient-brand)" }}
             >
-              <div className="grid h-full w-full grid-cols-2 gap-3 rounded-xl bg-background p-5">
-                <StatCard icon={<Leaf className="h-5 w-5" />} label="NDVI promedio" value="0.62" tone="success" />
-                <StatCard icon={<Droplets className="h-5 w-5" />} label="NDWI" value="0.18" tone="primary" />
-                <StatCard icon={<Sun className="h-5 w-5" />} label="EVI" value="0.41" tone="accent" />
-                <StatCard icon={<Bell className="h-5 w-5" />} label="Alertas activas" value="2" tone="primary" />
+              <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-xl bg-background p-6 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <ImageIcon className="h-7 w-7" />
+                </div>
+                <p className="text-sm font-semibold text-foreground">
+                  Imagen del proyecto próximamente
+                </p>
+                <p className="max-w-xs text-xs text-muted-foreground">
+                  Aquí irá la foto representativa del trabajo en campo de Sayariy
+                  Resurgiendo en Cayaltí.
+                </p>
               </div>
             </div>
           </div>

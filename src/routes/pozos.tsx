@@ -301,7 +301,7 @@ function PozosPage() {
         {fcLoading ? (
           <Skeleton className="h-56 w-full" />
         ) : forecast ? (
-          <RainCard days={forecast} />
+          <RainCard days={forecast} history={rainHistory} />
         ) : null}
 
         {/* 7. TipsCard */}

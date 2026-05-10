@@ -12,10 +12,11 @@
  *
  * Sin números técnicos, sin ejes, sin jerga.
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
 import { EnsoCard } from "@/components/enso-card";
 import { FieldNews } from "@/components/field-news";
+import { ReportDownloadButton } from "@/components/report-download-button";
 import {
   useStatus,
   useWell,
@@ -25,16 +26,16 @@ import {
   useCrops,
   useEnso,
 } from "@/hooks/use-cropguard";
-import type { Alert, CropRec, ForecastDay, Risk } from "@/lib/cropguard-api";
+import type { Alert, CropRec, EnsoData, ForecastDay, Risk, StatusData } from "@/lib/cropguard-api";
 
 export const Route = createFileRoute("/campo")({
   head: () => ({
     meta: [
-      { title: "Vista de Campo — Sayariy CropGuard" },
+      { title: "Vista Simple — Sayariy CropGuard" },
       {
         name: "description",
         content:
-          "Información esencial para trabajadores de campo: estado del pozo, riego y avisos en lenguaje claro.",
+          "Vista simple para agricultores: estado del día, agua del pozo, clima y avisos en lenguaje claro.",
       },
     ],
   }),
@@ -195,28 +196,89 @@ function AlertCard({ alert }: { alert: Alert }) {
   );
 }
 
-// ── Crop recommendation card ──────────────────────────────────────────────────
+// ── Crop simple tip card ─────────────────────────────────────────────────────
 
-function CropRecCard({ rec }: { rec: CropRec }) {
+function shortCropTip(crop: string, status?: StatusData, enso?: EnsoData): string {
+  const dry = (status?.rain_3d_mm ?? 0) < 2;
+  const ninoActive = !!enso && enso.icen.state !== "Normal";
+  const c = crop.toLowerCase();
+  if (c === "maracuya")
+    return ninoActive
+      ? "Temporada seca, pero El Niño Costero activo. Prepárese ya."
+      : dry
+        ? "Riegue de noche. Cuide flores y polinizadores."
+        : "Buen momento. Mantenga el riego regular.";
+  if (c === "camote")
+    return dry ? "Riegue ligero cada 3 días." : "Cuide hongos en hojas tras la lluvia.";
+  if (c === "frijol")
+    return ninoActive
+      ? "Posponga siembra si hay aviso de lluvia fuerte."
+      : "Buen momento para sembrar.";
+  if (c === "maiz")
+    return dry
+      ? "Riegue al amanecer. Vigile estrés en hojas."
+      : "Bien. Revise plagas en mazorca.";
+  return "Siga la guía del técnico de campo.";
+}
+
+const CROP_EMOJI: Record<string, string> = {
+  maracuya: "🍈",
+  camote: "🍠",
+  frijol: "🫘",
+  maiz: "🌽",
+  _suggestion: "✨",
+  suggestion: "✨",
+};
+const CROP_NAME: Record<string, string> = {
+  maracuya: "Maracuyá",
+  camote: "Camote",
+  frijol: "Frijol",
+  maiz: "Maíz",
+  _suggestion: "Sugerencia",
+  suggestion: "Sugerencia",
+};
+
+function SimpleCropTip({
+  rec,
+  status,
+  enso,
+}: {
+  rec: CropRec;
+  status?: StatusData;
+  enso?: EnsoData;
+}) {
   const styles: Record<string, string> = {
-    green: "bg-green-50 border-green-200",
-    yellow: "bg-amber-50 border-amber-200",
-    red: "bg-red-50 border-red-200",
+    green: "bg-green-50 border-green-200 text-green-900",
+    yellow: "bg-amber-50 border-amber-200 text-amber-900",
+    red: "bg-red-50 border-red-200 text-red-900",
   };
-  const icons: Record<string, string> = {
-    green: "🌿",
-    yellow: "⚠️",
-    red: "🚫",
+  const pill: Record<string, string> = {
+    green: "bg-green-500 text-white",
+    yellow: "bg-amber-500 text-white",
+    red: "bg-red-500 text-white",
   };
+  const pillText: Record<string, string> = {
+    green: "BIEN",
+    yellow: "CUIDADO",
+    red: "RIESGO",
+  };
+  const key = (rec.crop ?? "").toLowerCase();
+  const emoji = CROP_EMOJI[key] ?? "🌱";
+  const name = CROP_NAME[key] ?? rec.crop;
+  const tip = shortCropTip(key, status, enso);
+
   return (
-    <div className={`rounded-xl border p-4 ${styles[rec.severity] ?? "bg-card border-border/60"}`}>
-      <div className="flex items-center gap-2 font-bold text-foreground">
-        {icons[rec.severity] ?? "🌱"} {rec.title_es}
+    <div className={`flex items-center gap-3 rounded-xl border p-3 ${styles[rec.severity] ?? "bg-card border-border/60"}`}>
+      <span className="text-3xl leading-none">{emoji}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-base font-bold">{name}</span>
+          <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${pill[rec.severity] ?? "bg-muted"}`}>
+            {pillText[rec.severity] ?? rec.severity.toUpperCase()}
+          </span>
+        </div>
+        <p className="mt-0.5 text-sm leading-snug opacity-90">{tip}</p>
       </div>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{rec.body_es}</p>
-      {rec.action_es && (
-        <p className="mt-2 text-sm font-semibold text-foreground">→ {rec.action_es}</p>
-      )}
     </div>
   );
 }
@@ -246,11 +308,14 @@ function CampoPage() {
         {/* Header */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Vista de campo
+            Vista Simple
           </p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
             Estado de hoy
           </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Lo importante para el día, en lenguaje claro.
+          </p>
         </div>
 
         {/* Traffic light */}
@@ -321,20 +386,31 @@ function CampoPage() {
           ) : null}
         </div>
 
-        {/* Crop recommendations */}
+        {/* Crop quick tips (very short, visual) */}
         <div className="space-y-3">
-          <h2 className="text-lg font-bold text-foreground">
-            🌿 ¿Qué plantar y qué cuidar ahora?
-          </h2>
+          <h2 className="text-lg font-bold text-foreground">🌿 Sus cultivos hoy</h2>
           {crops.isLoading ? (
             <Skeleton className="h-20 w-full" />
           ) : crops.data ? (
-            crops.data.map((r) => <CropRecCard key={r.crop} rec={r} />)
+            <div className="space-y-2">
+              {crops.data.map((r) => (
+                <SimpleCropTip key={r.crop} rec={r} status={status.data} enso={enso.data} />
+              ))}
+            </div>
           ) : null}
+          <Link
+            to="/recomendaciones"
+            className="block rounded-xl border border-dashed border-border/70 bg-card/60 p-3 text-center text-sm font-semibold text-primary hover:bg-secondary/40"
+          >
+            🌱 Ver recomendaciones detalladas →
+          </Link>
         </div>
 
         {/* Real-time news from Peru, summarized by AI */}
         <FieldNews />
+
+        {/* Simple PDF download (only here, for farmers) */}
+        <ReportDownloadButton variant="simple" />
 
         {/* Footer note */}
         <p className="text-center text-xs text-muted-foreground pb-4">

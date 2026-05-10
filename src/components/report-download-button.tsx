@@ -14,8 +14,15 @@ import {
   useRainHistory,
 } from "@/hooks/use-cropguard";
 import { generateReportPdf } from "@/lib/report-pdf";
+import { generateSimpleReportPdf } from "@/lib/simple-report-pdf";
 
-export function ReportDownloadButton() {
+type Variant = "tecnico" | "simple";
+
+interface Props {
+  variant?: Variant;
+}
+
+export function ReportDownloadButton({ variant = "tecnico" }: Props) {
   const { data: status } = useStatus();
   const { data: well } = useWell();
   const { data: forecast } = useForecast();
@@ -34,18 +41,30 @@ export function ReportDownloadButton() {
     setBusy(true);
     setError(null);
     try {
-      await generateReportPdf({
-        status,
-        well,
-        forecast,
-        rainHistory,
-        irrigation,
-        enso,
-        crops,
-        communities,
-        alerts,
-        timeseries,
-      });
+      if (variant === "simple") {
+        await generateSimpleReportPdf({
+          status,
+          well,
+          forecast,
+          irrigation,
+          enso,
+          crops,
+          alerts,
+        });
+      } else {
+        await generateReportPdf({
+          status,
+          well,
+          forecast,
+          rainHistory,
+          irrigation,
+          enso,
+          crops,
+          communities,
+          alerts,
+          timeseries,
+        });
+      }
     } catch (e) {
       console.error(e);
       setError("No se pudo generar el PDF. Intente de nuevo.");
@@ -54,12 +73,18 @@ export function ReportDownloadButton() {
     }
   };
 
+  const isSimple = variant === "simple";
+
   return (
     <div className="rounded-2xl border border-border/60 bg-card p-5 space-y-3">
       <div>
-        <h2 className="text-lg font-bold text-foreground">📄 Reporte completo en PDF</h2>
+        <h2 className="text-lg font-bold text-foreground">
+          {isSimple ? "📄 Guía del agricultor (PDF)" : "📄 Reporte completo en PDF"}
+        </h2>
         <p className="text-xs text-muted-foreground">
-          Descargue un informe con el estado actual de pozos, clima, comunidades y cultivos.
+          {isSimple
+            ? "Resumen visual y sencillo: estado, agua, clima y qué hacer en sus cultivos."
+            : "Descargue un informe con el estado actual de pozos, clima, comunidades y cultivos."}
         </p>
       </div>
       <Button
@@ -75,7 +100,7 @@ export function ReportDownloadButton() {
         ) : (
           <>
             <Download className="mr-2 h-4 w-4" />
-            Descargar reporte PDF
+            {isSimple ? "Descargar guía simple" : "Descargar reporte PDF"}
           </>
         )}
       </Button>

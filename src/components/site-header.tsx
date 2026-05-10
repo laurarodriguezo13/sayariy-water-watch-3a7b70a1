@@ -5,9 +5,10 @@ import logo from "@/assets/sayariy-logo.png";
 
 const nav = [
   { to: "/", label: "Inicio" },
-  { to: "/campo", label: "🌾 Campo" },
+  { to: "/campo", label: "🌾 Vista Simple" },
   { to: "/pozos", label: "💧 Pozos" },
   { to: "/cultivos", label: "🌿 Cultivos" },
+  { to: "/recomendaciones", label: "🌱 Recomendaciones" },
   { to: "/dashboard", label: "Panel" },
   { to: "/contacto", label: "Contacto" },
 ] as const;

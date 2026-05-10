@@ -279,6 +279,10 @@ function PozosPage() {
         {/* 8. Wells map */}
         <WellsMap />
 
+        {/* 9. PDF report */}
+        <ReportDownloadButton />
+
+
         <p className="text-center text-xs text-muted-foreground pb-4">
           ¿Necesita registrar una nueva medición?{" "}
           <a

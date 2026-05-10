@@ -15,6 +15,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
 import { EnsoCard } from "@/components/enso-card";
+import { FieldNews } from "@/components/field-news";
 import {
   useStatus,
   useWell,
@@ -331,6 +332,9 @@ function CampoPage() {
             crops.data.map((r) => <CropRecCard key={r.crop} rec={r} />)
           ) : null}
         </div>
+
+        {/* Real-time news from Peru, summarized by AI */}
+        <FieldNews />
 
         {/* Footer note */}
         <p className="text-center text-xs text-muted-foreground pb-4">

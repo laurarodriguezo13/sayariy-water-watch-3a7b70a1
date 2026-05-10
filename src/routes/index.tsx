@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Satellite, LineChart, Bell, Leaf, Droplets, Sun } from "lucide-react";
+import { Satellite, LineChart, Bell, ImageIcon } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 
 export const Route = createFileRoute("/")({

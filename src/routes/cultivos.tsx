@@ -135,6 +135,9 @@ function CultivosPage() {
           ) : null}
         </div>
 
+        {/* 7. PDF report */}
+        <ReportDownloadButton />
+
         <p className="text-center text-xs text-muted-foreground pb-4">
           ¿Necesita más detalle técnico?{" "}
           <a

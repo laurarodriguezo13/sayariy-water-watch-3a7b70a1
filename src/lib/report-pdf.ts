@@ -309,20 +309,32 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
     // @ts-expect-error
     y = doc.lastAutoTable.finalY + 8;
 
-    // Rain chart
-    const totalRain = data.forecast.reduce((s, d) => s + d.rain_mm, 0);
-    const maxRain = Math.max(2, ...data.forecast.map((d) => d.rain_mm));
+    // Rain chart — past 7 days (gray) + forecast 7 days (magenta)
+    const past = data.rainHistory ?? [];
+    const future = data.forecast;
+    const combined: { date: string; rain_mm: number; kind: "past" | "future" }[] = [
+      ...past.map((d) => ({ date: d.date, rain_mm: d.rain_mm, kind: "past" as const })),
+      ...future.map((d) => ({ date: d.date, rain_mm: d.rain_mm, kind: "future" as const })),
+    ];
+    const totalFuture = future.reduce((s, d) => s + d.rain_mm, 0);
+    const totalPast = past.reduce((s, d) => s + d.rain_mm, 0);
+    const maxRain = Math.max(2, ...combined.map((d) => d.rain_mm));
     const chartH = 50;
-    y = ensureSpace(y, chartH + 18);
+    y = ensureSpace(y, chartH + 22);
 
     doc.setFont(TITLE, "bold");
     doc.setFontSize(11);
     doc.setTextColor(...BRAND.ink);
-    doc.text(`Distribucion de lluvia`, margin, y);
+    doc.text(`Lluvia: ultimos 7 dias y pronostico 7 dias`, margin, y);
     doc.setFont(BODY, "normal");
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(...BRAND.muted);
-    doc.text(`Total semanal: ${totalRain.toFixed(1)} mm`, pageW - margin, y, { align: "right" });
+    doc.text(
+      `Pasado: ${totalPast.toFixed(1)} mm  -  Pronostico: ${totalFuture.toFixed(1)} mm`,
+      pageW - margin,
+      y,
+      { align: "right" }
+    );
     y += 4;
 
     const chartX = margin;
@@ -332,26 +344,51 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
     doc.setDrawColor(...BRAND.line);
     doc.line(chartX, chartY + chartH, chartX + chartW, chartY + chartH);
 
-    const n = data.forecast.length;
-    const slotW = chartW / n;
-    const barW = Math.min(14, slotW * 0.55);
-    data.forecast.forEach((d, i) => {
+    const n = combined.length;
+    const slotW = chartW / Math.max(n, 1);
+    const barW = Math.min(10, slotW * 0.6);
+
+    // Divider between past and future
+    if (past.length && future.length) {
+      const divX = chartX + slotW * past.length;
+      doc.setDrawColor(...BRAND.line);
+      doc.setLineDashPattern([1, 1], 0);
+      doc.line(divX, chartY, divX, chartY + chartH);
+      doc.setLineDashPattern([], 0);
+    }
+
+    combined.forEach((d, i) => {
       const h = (d.rain_mm / maxRain) * (chartH - 8);
       const cx = chartX + slotW * i + slotW / 2;
       const bx = cx - barW / 2;
       const by = chartY + chartH - Math.max(0.4, h);
-      doc.setFillColor(...BRAND.magenta);
+      if (d.kind === "past") {
+        doc.setFillColor(170, 170, 170);
+      } else {
+        doc.setFillColor(...BRAND.magenta);
+      }
       doc.rect(bx, by, barW, Math.max(0.4, h), "F");
-      // Value
       doc.setFont(BODY, "normal");
-      doc.setFontSize(7.5);
+      doc.setFontSize(6.5);
       doc.setTextColor(...BRAND.ink);
-      doc.text(`${d.rain_mm.toFixed(1)}`, cx, by - 1.5, { align: "center" });
-      // Date label
+      doc.text(`${d.rain_mm.toFixed(1)}`, cx, by - 1.2, { align: "center" });
       doc.setTextColor(...BRAND.muted);
       doc.text(shortDate(d.date), cx, chartY + chartH + 4, { align: "center" });
     });
-    y = chartY + chartH + 10;
+
+    // Legend
+    const legendY = chartY + chartH + 9;
+    doc.setFillColor(170, 170, 170);
+    doc.rect(chartX, legendY, 3, 3, "F");
+    doc.setFont(BODY, "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...BRAND.muted);
+    doc.text("Ultimos 7 dias", chartX + 4.5, legendY + 2.5);
+    doc.setFillColor(...BRAND.magenta);
+    doc.rect(chartX + 35, legendY, 3, 3, "F");
+    doc.text("Pronostico 7 dias", chartX + 39.5, legendY + 2.5);
+
+    y = chartY + chartH + 16;
   }
 
   // ---- ENSO ----

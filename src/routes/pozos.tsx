@@ -16,8 +16,8 @@ import { EnsoCard } from "@/components/enso-card";
 import { ForecastChart } from "@/components/forecast-chart";
 import { WellsMap } from "@/components/wells-map";
 import { ReportDownloadButton } from "@/components/report-download-button";
-import { useWell, useForecast, useIrrigation, useEnso } from "@/hooks/use-cropguard";
-import type { ForecastDay } from "@/lib/cropguard-api";
+import { useWell, useForecast, useIrrigation, useEnso, useRainHistory } from "@/hooks/use-cropguard";
+import type { ForecastDay, RainHistoryDay } from "@/lib/cropguard-api";
 
 export const Route = createFileRoute("/pozos")({
   head: () => ({

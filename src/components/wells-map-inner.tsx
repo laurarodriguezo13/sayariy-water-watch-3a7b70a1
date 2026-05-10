@@ -33,9 +33,9 @@ export default function WellsMapInner() {
         ],
       },
       center: [-79.5163, -6.9157],
-      zoom: 16,
-      minZoom: 14,
-      maxZoom: 17,
+      zoom: 15.5,
+      minZoom: 13,
+      maxZoom: 16,
       attributionControl: { compact: true },
     });
 

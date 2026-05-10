@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchAlerts,
+  fetchAllTimeseries,
   fetchCommunities,
   fetchCrops,
   fetchEnso,
@@ -40,3 +41,6 @@ export const useAlerts = () =>
 
 export const useStatus = () =>
   useQuery({ queryKey: ["status"], queryFn: fetchStatus, staleTime: STALE_10MIN });
+
+export const useAllTimeseries = () =>
+  useQuery({ queryKey: ["all-timeseries"], queryFn: fetchAllTimeseries, staleTime: STALE_30MIN });

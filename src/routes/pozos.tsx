@@ -14,6 +14,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
 import { EnsoCard } from "@/components/enso-card";
 import { ForecastChart } from "@/components/forecast-chart";
+import { WellsMap } from "@/components/wells-map";
 import { useWell, useForecast, useIrrigation, useEnso } from "@/hooks/use-cropguard";
 import type { ForecastDay } from "@/lib/cropguard-api";
 
@@ -273,6 +274,9 @@ function PozosPage() {
 
         {/* 7. TipsCard */}
         {!wellLoading && <TipsCard pct={pct} />}
+
+        {/* 8. Wells map */}
+        <WellsMap />
 
         <p className="text-center text-xs text-muted-foreground pb-4">
           ¿Necesita registrar una nueva medición?{" "}

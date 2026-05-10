@@ -237,3 +237,26 @@ export const fetchAlerts = () =>
 
 export const fetchStatus = () =>
   get<StatusData>("/status").catch(() => FALLBACK_STATUS);
+
+const ALL_COMMUNITY_IDS = ["cayalti", "victor-raul", "monsefu", "reque", "nueva-libertad"] as const;
+
+export interface CommunityTimeseries {
+  id: string;
+  name: string;
+  data: TimeseriesPoint[];
+}
+
+const COMMUNITY_NAMES: Record<string, string> = {
+  "cayalti": "Cayaltí",
+  "victor-raul": "Víctor Raúl",
+  "monsefu": "Monsefú",
+  "reque": "Reque",
+  "nueva-libertad": "Nueva Libertad",
+};
+
+export const fetchAllTimeseries = (): Promise<CommunityTimeseries[]> =>
+  Promise.all(
+    ALL_COMMUNITY_IDS.map((id) =>
+      fetchTimeseries(id).then((data) => ({ id, name: COMMUNITY_NAMES[id] ?? id, data }))
+    )
+  );

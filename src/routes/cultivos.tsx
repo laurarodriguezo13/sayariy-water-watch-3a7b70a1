@@ -11,7 +11,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
 import { EnsoCard } from "@/components/enso-card";
 import { CommunityMap } from "@/components/community-map";
-import { useCommunities, useCrops, useEnso } from "@/hooks/use-cropguard";
+import { NdviMap } from "@/components/ndvi-map";
+import { StressTimeseries } from "@/components/stress-timeseries";
+import { useCommunities, useCrops, useEnso, useAllTimeseries } from "@/hooks/use-cropguard";
 import type { CropRec } from "@/lib/cropguard-api";
 
 export const Route = createFileRoute("/cultivos")({
@@ -63,6 +65,7 @@ function CultivosPage() {
   const { data: communities, isLoading: commLoading } = useCommunities();
   const { data: crops, isLoading: cropsLoading } = useCrops();
   const { data: enso, isLoading: ensoLoading } = useEnso();
+  const { data: allTimeseries, isLoading: tsLoading } = useAllTimeseries();
 
   const showEnso = !ensoLoading && enso && enso.icen.state !== "Normal";
 
@@ -92,7 +95,10 @@ function CultivosPage() {
           />
         ) : null}
 
-        {/* 3. CommunityMap */}
+        {/* 3. NDVI satellite map */}
+        <NdviMap communities={communities} />
+
+        {/* 4. Community cards */}
         {commLoading ? (
           <div className="rounded-2xl border border-border/60 bg-card p-5">
             <h2 className="mb-4 text-lg font-bold text-foreground">🗺️ Comunidades monitoreadas</h2>
@@ -106,7 +112,10 @@ function CultivosPage() {
           <CommunityMap communities={communities} />
         )}
 
-        {/* 4. Crop recommendations */}
+        {/* 5. Stress timeseries */}
+        <StressTimeseries series={allTimeseries ?? []} isLoading={tsLoading} />
+
+        {/* 6. Crop recommendations */}
         <div>
           <h2 className="text-lg font-bold text-foreground mb-3">
             🌿 ¿Qué plantar y qué cuidar ahora?

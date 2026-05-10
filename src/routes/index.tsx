@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Satellite, LineChart, Bell, ImageIcon } from "lucide-react";
+import { Satellite, LineChart, Bell } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
+import farmersImg from "@/assets/farmers-cayalti.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -62,21 +63,15 @@ function HomePage() {
           </div>
           <div className="relative">
             <div
-              className="aspect-[4/3] w-full rounded-2xl border border-border/60 p-1"
+              className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border/60 p-1 shadow-[var(--shadow-brand)]"
               style={{ background: "var(--gradient-brand)" }}
             >
-              <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-xl bg-background p-6 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <ImageIcon className="h-7 w-7" />
-                </div>
-                <p className="text-sm font-semibold text-foreground">
-                  Imagen del proyecto próximamente
-                </p>
-                <p className="max-w-xs text-xs text-muted-foreground">
-                  Aquí irá la foto representativa del trabajo en campo de Sayariy
-                  Resurgiendo en Cayaltí.
-                </p>
-              </div>
+              <img
+                src={farmersImg}
+                alt="Agricultoras de Cayaltí trabajando en el campo al amanecer"
+                className="h-full w-full rounded-xl object-cover"
+                loading="eager"
+              />
             </div>
           </div>
         </div>

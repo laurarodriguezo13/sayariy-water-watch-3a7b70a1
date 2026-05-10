@@ -235,6 +235,7 @@ function TipsCard({ pct }: { pct: number }) {
 function PozosPage() {
   const { data: well, isLoading: wellLoading } = useWell();
   const { data: forecast, isLoading: fcLoading } = useForecast();
+  const { data: rainHistory } = useRainHistory();
   const { data: irrigation, isLoading: irrLoading } = useIrrigation();
   const { data: enso, isLoading: ensoLoading } = useEnso();
 

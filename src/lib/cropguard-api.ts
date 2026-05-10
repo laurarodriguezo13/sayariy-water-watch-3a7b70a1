@@ -251,7 +251,9 @@ export const fetchWell = () =>
   get<WellData>("/well").catch(() => FALLBACK_WELL);
 
 export const fetchForecast = () =>
-  get<ForecastDay[]>("/forecast").catch(() => FALLBACK_FORECAST);
+  get<ForecastDay[]>("/forecast")
+    .catch(() => fetchOpenMeteoForecast())
+    .catch(() => FALLBACK_FORECAST);
 
 export const fetchEnso = () =>
   get<EnsoData>("/enso").catch(() => FALLBACK_ENSO);

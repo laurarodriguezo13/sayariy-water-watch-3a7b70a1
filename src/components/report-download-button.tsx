@@ -11,6 +11,7 @@ import {
   useCommunities,
   useAlerts,
   useAllTimeseries,
+  useRainHistory,
 } from "@/hooks/use-cropguard";
 import { generateReportPdf } from "@/lib/report-pdf";
 
@@ -18,6 +19,7 @@ export function ReportDownloadButton() {
   const { data: status } = useStatus();
   const { data: well } = useWell();
   const { data: forecast } = useForecast();
+  const { data: rainHistory } = useRainHistory();
   const { data: irrigation } = useIrrigation();
   const { data: enso } = useEnso();
   const { data: crops } = useCrops();
@@ -36,6 +38,7 @@ export function ReportDownloadButton() {
         status,
         well,
         forecast,
+        rainHistory,
         irrigation,
         enso,
         crops,

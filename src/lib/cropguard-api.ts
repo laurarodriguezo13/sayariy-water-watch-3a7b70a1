@@ -54,6 +54,26 @@ async function fetchOpenMeteoForecast(): Promise<ForecastDay[]> {
   }));
 }
 
+export interface RainHistoryDay {
+  date: string;
+  rain_mm: number;
+}
+
+export async function fetchRainHistory(): Promise<RainHistoryDay[]> {
+  // past 7 days (excluding today, which is in forecast)
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${CAYALTI.lat}&longitude=${CAYALTI.lon}` +
+    `&daily=precipitation_sum&timezone=America%2FLima&past_days=7&forecast_days=0`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`open-meteo history ${res.status}`);
+  const j = await res.json();
+  const d = j.daily;
+  return d.time.map((date: string, i: number) => ({
+    date,
+    rain_mm: d.precipitation_sum[i] ?? 0,
+  }));
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type Risk = "bajo" | "medio" | "alto";

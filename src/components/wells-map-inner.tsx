@@ -23,25 +23,18 @@ export default function WellsMapInner() {
               "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
             ],
             tileSize: 256,
+            maxzoom: 19,
             attribution:
               "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
-          },
-          labels: {
-            type: "raster",
-            tiles: [
-              "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-            ],
-            tileSize: 256,
-            maxzoom: 13,
           },
         },
         layers: [
           { id: "satellite", type: "raster", source: "satellite" },
-          { id: "labels", type: "raster", source: "labels", maxzoom: 19 },
         ],
       },
       center: [-79.5163, -6.9157],
       zoom: 16.5,
+      maxZoom: 19,
       attributionControl: { compact: true },
     });
 

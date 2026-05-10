@@ -15,6 +15,7 @@ import { SiteShell } from "@/components/site-shell";
 import { EnsoCard } from "@/components/enso-card";
 import { ForecastChart } from "@/components/forecast-chart";
 import { WellsMap } from "@/components/wells-map";
+import { ReportDownloadButton } from "@/components/report-download-button";
 import { useWell, useForecast, useIrrigation, useEnso } from "@/hooks/use-cropguard";
 import type { ForecastDay } from "@/lib/cropguard-api";
 
@@ -277,6 +278,10 @@ function PozosPage() {
 
         {/* 8. Wells map */}
         <WellsMap />
+
+        {/* 9. PDF report */}
+        <ReportDownloadButton />
+
 
         <p className="text-center text-xs text-muted-foreground pb-4">
           ¿Necesita registrar una nueva medición?{" "}

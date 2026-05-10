@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RecomendacionesRouteImport } from './routes/recomendaciones'
 import { Route as ProyectoRouteImport } from './routes/proyecto'
 import { Route as PozosRouteImport } from './routes/pozos'
 import { Route as CultivosRouteImport } from './routes/cultivos'
@@ -20,6 +21,11 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardAlertasRouteImport } from './routes/dashboard.alertas'
 import { Route as DashboardComunidadIdRouteImport } from './routes/dashboard.comunidad.$id'
 
+const RecomendacionesRoute = RecomendacionesRouteImport.update({
+  id: '/recomendaciones',
+  path: '/recomendaciones',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProyectoRoute = ProyectoRouteImport.update({
   id: '/proyecto',
   path: '/proyecto',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/cultivos': typeof CultivosRoute
   '/pozos': typeof PozosRoute
   '/proyecto': typeof ProyectoRoute
+  '/recomendaciones': typeof RecomendacionesRoute
   '/dashboard/alertas': typeof DashboardAlertasRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/comunidad/$id': typeof DashboardComunidadIdRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/cultivos': typeof CultivosRoute
   '/pozos': typeof PozosRoute
   '/proyecto': typeof ProyectoRoute
+  '/recomendaciones': typeof RecomendacionesRoute
   '/dashboard/alertas': typeof DashboardAlertasRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/comunidad/$id': typeof DashboardComunidadIdRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/cultivos': typeof CultivosRoute
   '/pozos': typeof PozosRoute
   '/proyecto': typeof ProyectoRoute
+  '/recomendaciones': typeof RecomendacionesRoute
   '/dashboard/alertas': typeof DashboardAlertasRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/comunidad/$id': typeof DashboardComunidadIdRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/cultivos'
     | '/pozos'
     | '/proyecto'
+    | '/recomendaciones'
     | '/dashboard/alertas'
     | '/dashboard/'
     | '/dashboard/comunidad/$id'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/cultivos'
     | '/pozos'
     | '/proyecto'
+    | '/recomendaciones'
     | '/dashboard/alertas'
     | '/dashboard'
     | '/dashboard/comunidad/$id'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/cultivos'
     | '/pozos'
     | '/proyecto'
+    | '/recomendaciones'
     | '/dashboard/alertas'
     | '/dashboard/'
     | '/dashboard/comunidad/$id'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   CultivosRoute: typeof CultivosRoute
   PozosRoute: typeof PozosRoute
   ProyectoRoute: typeof ProyectoRoute
+  RecomendacionesRoute: typeof RecomendacionesRoute
   DashboardAlertasRoute: typeof DashboardAlertasRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardComunidadIdRoute: typeof DashboardComunidadIdRoute
@@ -162,6 +175,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/recomendaciones': {
+      id: '/recomendaciones'
+      path: '/recomendaciones'
+      fullPath: '/recomendaciones'
+      preLoaderRoute: typeof RecomendacionesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/proyecto': {
       id: '/proyecto'
       path: '/proyecto'
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   CultivosRoute: CultivosRoute,
   PozosRoute: PozosRoute,
   ProyectoRoute: ProyectoRoute,
+  RecomendacionesRoute: RecomendacionesRoute,
   DashboardAlertasRoute: DashboardAlertasRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardComunidadIdRoute: DashboardComunidadIdRoute,
@@ -250,3 +271,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

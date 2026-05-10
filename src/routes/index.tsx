@@ -133,36 +133,6 @@ function HomePage() {
   );
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  tone: "primary" | "accent" | "success";
-}) {
-  const toneClass =
-    tone === "primary"
-      ? "text-primary bg-primary/10"
-      : tone === "accent"
-      ? "text-accent-foreground bg-accent/30"
-      : "text-success bg-success/10";
-  return (
-    <div className="flex flex-col justify-between rounded-lg border border-border/60 bg-card p-4">
-      <div className={`inline-flex h-9 w-9 items-center justify-center rounded-md ${toneClass}`}>
-        {icon}
-      </div>
-      <div className="mt-3">
-        <div className="text-2xl font-bold text-foreground">{value}</div>
-        <div className="text-xs text-muted-foreground">{label}</div>
-      </div>
-    </div>
-  );
-}
-
 function FeatureCard({
   icon,
   title,

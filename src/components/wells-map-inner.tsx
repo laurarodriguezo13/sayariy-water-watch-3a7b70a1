@@ -1,49 +1,106 @@
-import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
-import L from "leaflet";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { useEffect, useRef } from "react";
+import maplibregl from "maplibre-gl";
 
-// Fix Leaflet default icon URLs broken by bundlers
-const iconUrl = "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png";
-const iconRetinaUrl = "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png";
-const shadowUrl = "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png";
-
-const defaultIcon = L.icon({ iconUrl, iconRetinaUrl, shadowUrl, iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] });
-const orangeIcon = L.icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png",
-  shadowUrl,
-  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
-});
-
-const POZO1: [number, number] = [-6.916094, -79.516392];
-const POZO2: [number, number] = [-6.915342, -79.516274];
+const POZO1: [number, number] = [-79.516392, -6.916094]; // [lng, lat]
+const POZO2: [number, number] = [-79.516274, -6.915342];
 
 export default function WellsMapInner() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: {
+        version: 8,
+        sources: {
+          satellite: {
+            type: "raster",
+            tiles: [
+              "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            ],
+            tileSize: 256,
+            attribution:
+              "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+          },
+          labels: {
+            type: "raster",
+            tiles: [
+              "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+            ],
+            tileSize: 256,
+          },
+        },
+        layers: [
+          { id: "satellite", type: "raster", source: "satellite" },
+          { id: "labels", type: "raster", source: "labels" },
+        ],
+      },
+      center: [-79.5163, -6.9157],
+      zoom: 16.5,
+      attributionControl: { compact: true },
+    });
+
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+    map.on("load", () => {
+      // Connecting line between wells
+      map.addSource("well-line", {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          geometry: { type: "LineString", coordinates: [POZO1, POZO2] },
+          properties: {},
+        },
+      });
+      map.addLayer({
+        id: "well-line",
+        type: "line",
+        source: "well-line",
+        paint: {
+          "line-color": "#60a5fa",
+          "line-width": 2,
+          "line-dasharray": [2, 2],
+        },
+      });
+    });
+
+    // Markers
+    const mk = (lng: number, lat: number, color: string, html: string) => {
+      const el = document.createElement("div");
+      el.style.cssText = `width:18px;height:18px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 0 0 2px ${color}88;cursor:pointer;`;
+      new maplibregl.Marker({ element: el })
+        .setLngLat([lng, lat])
+        .setPopup(new maplibregl.Popup({ offset: 14 }).setHTML(html))
+        .addTo(map);
+    };
+    mk(
+      POZO1[0],
+      POZO1[1],
+      "#2563eb",
+      "<strong>Pozo 1 (principal)</strong><br/>Profundidad: 20.20 m<br/>Extracción: ~50,000 L/día"
+    );
+    mk(
+      POZO2[0],
+      POZO2[1],
+      "#ea580c",
+      "<strong>Pozo 2 ASR (respaldo)</strong><br/>Profundidad: 19.20 m<br/>Activado por la ONG si Pozo 1 falla"
+    );
+
+    mapRef.current = map;
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
   return (
-    <MapContainer
-      center={[-6.9157, -79.5163]}
-      zoom={16}
-      style={{ height: "300px", width: "100%", borderRadius: "12px" }}
-      scrollWheelZoom={false}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <Marker position={POZO1} icon={defaultIcon}>
-        <Popup>
-          <strong>Pozo 1 (principal)</strong><br />
-          Profundidad: 20.20 m<br />
-          Extracción: ~50,000 L/día
-        </Popup>
-      </Marker>
-      <Marker position={POZO2} icon={orangeIcon}>
-        <Popup>
-          <strong>Pozo 2 ASR (respaldo)</strong><br />
-          Profundidad: 19.20 m<br />
-          Activado por la ONG si Pozo 1 falla
-        </Popup>
-      </Marker>
-      <Polyline positions={[POZO1, POZO2]} color="#2563eb" weight={2} dashArray="6 4" />
-    </MapContainer>
+    <div
+      ref={containerRef}
+      style={{ height: "300px", width: "100%", borderRadius: "12px", overflow: "hidden" }}
+    />
   );
 }

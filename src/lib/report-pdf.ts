@@ -431,7 +431,7 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
       doc.setFont(TITLE, "bold");
       doc.setFontSize(10);
       doc.setTextColor(...accent);
-      doc.text(c.crop.toUpperCase(), margin + 7, y + 7);
+      doc.text(cropLabel(c.crop), margin + 7, y + 7);
 
       doc.setFont(TITLE, "bold");
       doc.setFontSize(11.5);

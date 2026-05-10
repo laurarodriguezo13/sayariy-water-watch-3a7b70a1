@@ -7,6 +7,7 @@ import {
   fetchEnso,
   fetchForecast,
   fetchIrrigation,
+  fetchRainHistory,
   fetchStatus,
   fetchTimeseries,
   fetchWell,
@@ -14,6 +15,9 @@ import {
 
 const STALE_10MIN = 10 * 60 * 1000;
 const STALE_30MIN = 30 * 60 * 1000;
+
+export const useRainHistory = () =>
+  useQuery({ queryKey: ["rain-history"], queryFn: fetchRainHistory, staleTime: STALE_30MIN });
 
 export const useCommunities = () =>
   useQuery({ queryKey: ["communities"], queryFn: fetchCommunities, staleTime: STALE_10MIN });

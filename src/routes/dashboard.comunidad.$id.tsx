@@ -106,7 +106,8 @@ function ComunidadDetail() {
                 <RLineChart data={chartData} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="week" stroke="var(--color-muted-foreground)" fontSize={10} interval={4} />
-                  <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
+                  <YAxis yAxisId={0} stroke="var(--color-muted-foreground)" fontSize={12} domain={[0, 1]} />
+                  <YAxis yAxisId={1} orientation="right" stroke="var(--color-muted-foreground)" fontSize={12} domain={[0, 100]} />
                   <Tooltip
                     contentStyle={{
                       background: "var(--color-card)",
@@ -116,8 +117,8 @@ function ComunidadDetail() {
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="NDVI" stroke="var(--color-chart-3)" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="NDWI" stroke="var(--color-chart-4)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="NDVI" stroke="var(--color-chart-3)" strokeWidth={2} dot={false} yAxisId={0} />
+                  <Line type="monotone" dataKey="NDWI" stroke="var(--color-chart-4)" strokeWidth={2} dot={false} yAxisId={0} />
                   <Line type="monotone" dataKey="Estrés" stroke="var(--color-chart-1)" strokeWidth={2} dot={false} yAxisId={1} />
                 </RLineChart>
               </ResponsiveContainer>

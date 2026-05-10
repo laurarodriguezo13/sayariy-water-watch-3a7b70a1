@@ -25,12 +25,29 @@ export interface ReportData {
   timeseries?: { id: string; name: string; data: TimeseriesPoint[] }[];
 }
 
-// Strip emoji / non-latin1 characters that jsPDF's default fonts cannot render.
+// Brand palette (RGB)
+const BRAND = {
+  magenta: [168, 25, 92] as [number, number, number],
+  magentaDark: [120, 18, 66] as [number, number, number],
+  orange: [232, 163, 61] as [number, number, number],
+  green: [63, 165, 53] as [number, number, number],
+  ink: [34, 24, 38] as [number, number, number],
+  muted: [110, 100, 110] as [number, number, number],
+  cream: [252, 248, 242] as [number, number, number],
+  line: [220, 214, 210] as [number, number, number],
+};
+
+// Strip emoji and characters jsPDF default fonts cannot render.
 const clean = (s: string | undefined) =>
   (s ?? "")
     .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}]/gu, "")
     .replace(/\s+/g, " ")
     .trim();
+
+// Use Times for titles (formal serif, embedded, renders cleanly).
+// Helvetica bold has letter-spacing bugs in jsPDF — avoid it.
+const TITLE = "times";
+const BODY = "helvetica";
 
 async function loadLogoDataUrl(): Promise<string> {
   const res = await fetch(logoUrl);
@@ -51,11 +68,16 @@ function fmtDate(s?: string) {
   });
 }
 
+function shortDate(s?: string) {
+  if (!s) return "—";
+  return new Date(s).toLocaleDateString("es-PE", { day: "2-digit", month: "short" });
+}
+
 export async function generateReportPdf(data: ReportData): Promise<void> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
-  const margin = 15;
+  const margin = 16;
 
   let logoData = "";
   try {
@@ -64,85 +86,145 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
     /* ignore */
   }
 
-  const drawHeader = () => {
+  const drawHeader = (pageNumber: number) => {
+    // Top brand band
+    doc.setFillColor(...BRAND.magenta);
+    doc.rect(0, 0, pageW, 4, "F");
+    doc.setFillColor(...BRAND.orange);
+    doc.rect(0, 4, pageW, 1, "F");
+
     if (logoData) {
       try {
-        doc.addImage(logoData, "PNG", margin, 10, 18, 18);
+        doc.addImage(logoData, "PNG", margin, 9, 14, 14);
       } catch {
         /* ignore */
       }
     }
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(20, 83, 45);
-    doc.text("Sayariy CropGuard", margin + 22, 17);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(100);
-    doc.text("Reporte de estado — Pozos y Cultivos", margin + 22, 23);
-    doc.setDrawColor(200);
-    doc.line(margin, 32, pageW - margin, 32);
+    doc.setFont(TITLE, "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(...BRAND.magentaDark);
+    doc.text("Sayariy CropGuard", margin + 18, 16);
+    doc.setFont(BODY, "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...BRAND.muted);
+    doc.text("Reporte de estado · Pozos y Cultivos", margin + 18, 21);
+
+    // Page indicator on the right (only after page 1 has the cover header style)
+    if (pageNumber > 1) {
+      doc.setFont(TITLE, "italic");
+      doc.setFontSize(9);
+      doc.setTextColor(...BRAND.muted);
+      doc.text("Cayalti · Lambayeque", pageW - margin, 16, { align: "right" });
+    }
+
+    doc.setDrawColor(...BRAND.line);
+    doc.setLineWidth(0.2);
+    doc.line(margin, 27, pageW - margin, 27);
   };
 
   const drawFooter = (page: number, total: number) => {
+    doc.setDrawColor(...BRAND.line);
+    doc.setLineWidth(0.2);
+    doc.line(margin, pageH - 12, pageW - margin, pageH - 12);
+    doc.setFont(BODY, "normal");
     doc.setFontSize(8);
-    doc.setTextColor(120);
+    doc.setTextColor(...BRAND.muted);
     doc.text(
-      `Sayariy Resurgiendo · Cayalti, Lambayeque, Peru · Generado ${new Date().toLocaleString("es-PE")}`,
+      `Sayariy Resurgiendo · Generado el ${new Date().toLocaleString("es-PE")}`,
       margin,
-      pageH - 8
+      pageH - 7
     );
-    doc.text(`Pagina ${page} / ${total}`, pageW - margin, pageH - 8, { align: "right" });
+    doc.setFont(TITLE, "italic");
+    doc.text(`${page} / ${total}`, pageW - margin, pageH - 7, { align: "right" });
   };
 
-  let y = 38;
-  drawHeader();
+  const sectionTitle = (text: string, y: number) => {
+    doc.setFont(TITLE, "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(...BRAND.ink);
+    doc.text(text, margin, y);
+    // Accent underline
+    const w = doc.getTextWidth(text);
+    doc.setDrawColor(...BRAND.orange);
+    doc.setLineWidth(0.8);
+    doc.line(margin, y + 1.5, margin + Math.min(w, 50), y + 1.5);
+    doc.setLineWidth(0.2);
+    return y + 8;
+  };
 
-  // Cover summary
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.setTextColor(15, 23, 42);
-  doc.text("Reporte integral de campo", margin, y);
-  y += 8;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(80);
-  doc.text(`Fecha de generacion: ${new Date().toLocaleString("es-PE")}`, margin, y);
+  const ensureSpace = (y: number, needed: number) => {
+    if (y + needed > pageH - 18) {
+      doc.addPage();
+      drawHeader(doc.getNumberOfPages());
+      return 34;
+    }
+    return y;
+  };
+
+  let y = 34;
+  drawHeader(1);
+
+  // ---- Cover ----
+  doc.setFont(TITLE, "bold");
+  doc.setFontSize(26);
+  doc.setTextColor(...BRAND.ink);
+  doc.text("Reporte integral de campo", margin, y + 6);
+  y += 14;
+  doc.setFont(TITLE, "italic");
+  doc.setFontSize(11);
+  doc.setTextColor(...BRAND.muted);
+  doc.text(
+    `Emitido el ${new Date().toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" })}`,
+    margin,
+    y
+  );
   y += 5;
-  doc.text("Cobertura: Cayalti y comunidades vecinas (Lambayeque, Peru)", margin, y);
+  doc.setFont(BODY, "normal");
+  doc.setFontSize(9.5);
+  doc.text("Cobertura: Cayalti y comunidades vecinas, Lambayeque, Peru.", margin, y);
   y += 10;
 
-  // Status box
+  // ---- Status banner ----
   if (data.status) {
     const tl = data.status.traffic_light;
-    const colors: Record<string, [number, number, number]> = {
-      verde: [34, 197, 94],
-      amarillo: [245, 158, 11],
-      rojo: [239, 68, 68],
+    const palette: Record<string, [number, number, number]> = {
+      verde: BRAND.green,
+      amarillo: BRAND.orange,
+      rojo: [200, 50, 50],
     };
-    const c = colors[tl] ?? [100, 100, 100];
+    const labels: Record<string, string> = {
+      verde: "Estado favorable",
+      amarillo: "Atencion requerida",
+      rojo: "Riesgo elevado",
+    };
+    const c = palette[tl] ?? [120, 120, 120];
+    const summary = clean(data.status.summary_es);
+    const summaryLines = doc.splitTextToSize(summary, pageW - margin * 2 - 14);
+    const boxH = 14 + summaryLines.length * 5;
+
+    // Left color rail
     doc.setFillColor(...c);
-    doc.roundedRect(margin, y, pageW - margin * 2, 22, 3, 3, "F");
-    doc.setTextColor(255);
-    doc.setFont("helvetica", "bold");
+    doc.rect(margin, y, 4, boxH, "F");
+    // Card background
+    doc.setFillColor(...BRAND.cream);
+    doc.rect(margin + 4, y, pageW - margin * 2 - 4, boxH, "F");
+
+    doc.setFont(TITLE, "bold");
     doc.setFontSize(12);
-    doc.text(`Estado general: ${tl.toUpperCase()}`, margin + 4, y + 8);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    const lines = doc.splitTextToSize(clean(data.status.summary_es), pageW - margin * 2 - 8);
-    doc.text(lines, margin + 4, y + 14);
-    y += 28;
+    doc.setTextColor(...c);
+    doc.text(labels[tl] ?? tl.toUpperCase(), margin + 9, y + 7);
+
+    doc.setFont(BODY, "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...BRAND.ink);
+    doc.text(summaryLines, margin + 9, y + 13);
+    y += boxH + 8;
   }
 
-  // Key indicators table
-  doc.setTextColor(15, 23, 42);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text("Indicadores clave", margin, y);
-  y += 3;
-
+  // ---- Indicators ----
+  y = sectionTitle("Indicadores clave", y);
   autoTable(doc, {
-    startY: y + 2,
+    startY: y,
     margin: { left: margin, right: margin },
     head: [["Indicador", "Valor", "Detalle"]],
     body: [
@@ -152,18 +234,18 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
         data.well?.static_m != null ? `${data.well.static_m.toFixed(2)} m de profundidad` : "—",
       ],
       [
-        "Ultima medicion del pozo",
+        "Ultima medicion",
         fmtDate(data.well?.date),
         `Critico: ${data.well?.critical_m ?? "—"} m / Lleno: ${data.well?.full_m ?? "—"} m`,
       ],
       [
         "ICEN (Nino Costero)",
-        data.enso ? `${data.enso.icen.anom_c.toFixed(2)} C` : "—",
+        data.enso ? `${data.enso.icen.anom_c.toFixed(2)} °C` : "—",
         clean(data.enso?.icen.label_es),
       ],
       [
         "ONI (Nino global)",
-        data.enso ? `${data.enso.oni.anom_c.toFixed(2)} C` : "—",
+        data.enso ? `${data.enso.oni.anom_c.toFixed(2)} °C` : "—",
         data.enso?.oni.state ?? "—",
       ],
       [
@@ -177,88 +259,90 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
         clean(data.irrigation?.text_es),
       ],
     ],
-    styles: { fontSize: 9, cellPadding: 2.5 },
-    headStyles: { fillColor: [20, 83, 45], textColor: 255 },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 45 }, 1: { cellWidth: 35 } },
+    styles: { font: BODY, fontSize: 9, cellPadding: 3, textColor: BRAND.ink, lineColor: BRAND.line, lineWidth: 0.1 },
+    headStyles: { font: TITLE, fontStyle: "bold", fillColor: BRAND.magenta, textColor: 255, fontSize: 9.5 },
+    alternateRowStyles: { fillColor: [250, 247, 244] },
+    columnStyles: { 0: { fontStyle: "bold", cellWidth: 48 }, 1: { cellWidth: 38 } },
   });
   // @ts-expect-error autotable adds lastAutoTable
-  y = doc.lastAutoTable.finalY + 8;
+  y = doc.lastAutoTable.finalY + 10;
 
-  // Forecast 7 days
+  // ---- Forecast ----
   if (data.forecast?.length) {
-    if (y > pageH - 70) {
-      doc.addPage();
-      drawHeader();
-      y = 38;
-    }
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Pronostico 7 dias", margin, y);
-    y += 3;
+    y = ensureSpace(y, 80);
+    y = sectionTitle("Pronostico 7 dias", y);
     autoTable(doc, {
-      startY: y + 2,
+      startY: y,
       margin: { left: margin, right: margin },
-      head: [["Fecha", "Lluvia (mm)", "ET0 (mm)", "T max", "T min", "HR max", "HR min"]],
+      head: [["Fecha", "Lluvia", "ET0", "T max", "T min", "HR max", "HR min"]],
       body: data.forecast.map((d) => [
-        fmtDate(d.date),
-        d.rain_mm.toFixed(1),
-        d.et0_mm.toFixed(1),
-        `${d.tmax_c.toFixed(1)} C`,
-        `${d.tmin_c.toFixed(1)} C`,
+        shortDate(d.date),
+        `${d.rain_mm.toFixed(1)} mm`,
+        `${d.et0_mm.toFixed(1)} mm`,
+        `${d.tmax_c.toFixed(1)} °C`,
+        `${d.tmin_c.toFixed(1)} °C`,
         `${d.rh_max_pct} %`,
         `${d.rh_min_pct} %`,
       ]),
-      styles: { fontSize: 9, cellPadding: 2 },
-      headStyles: { fillColor: [30, 64, 175], textColor: 255 },
+      styles: { font: BODY, fontSize: 9, cellPadding: 2.5, lineColor: BRAND.line, lineWidth: 0.1 },
+      headStyles: { font: TITLE, fontStyle: "bold", fillColor: BRAND.magentaDark, textColor: 255 },
+      alternateRowStyles: { fillColor: [250, 247, 244] },
     });
     // @ts-expect-error
-    y = doc.lastAutoTable.finalY + 4;
+    y = doc.lastAutoTable.finalY + 8;
 
-    // Simple rain bar chart
+    // Rain chart
     const totalRain = data.forecast.reduce((s, d) => s + d.rain_mm, 0);
     const maxRain = Math.max(2, ...data.forecast.map((d) => d.rain_mm));
-    const chartW = pageW - margin * 2;
-    const barH = 6;
-    const gap = 2;
-    if (y + (barH + gap) * data.forecast.length + 12 > pageH - 20) {
-      doc.addPage();
-      drawHeader();
-      y = 38;
-    }
-    doc.setFont("helvetica", "bold");
+    const chartH = 50;
+    y = ensureSpace(y, chartH + 18);
+
+    doc.setFont(TITLE, "bold");
     doc.setFontSize(11);
-    doc.text(`Distribucion de lluvia (total ${totalRain.toFixed(1)} mm)`, margin, y);
+    doc.setTextColor(...BRAND.ink);
+    doc.text(`Distribucion de lluvia`, margin, y);
+    doc.setFont(BODY, "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...BRAND.muted);
+    doc.text(`Total semanal: ${totalRain.toFixed(1)} mm`, pageW - margin, y, { align: "right" });
     y += 4;
-    data.forecast.forEach((d) => {
-      const w = (d.rain_mm / maxRain) * (chartW - 50);
-      doc.setFillColor(96, 165, 250);
-      doc.rect(margin + 28, y, Math.max(0.2, w), barH, "F");
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(60);
-      doc.text(fmtDate(d.date).slice(0, 6), margin, y + 4.5);
-      doc.text(`${d.rain_mm.toFixed(1)} mm`, margin + 28 + Math.max(0.2, w) + 2, y + 4.5);
-      y += barH + gap;
+
+    const chartX = margin;
+    const chartY = y;
+    const chartW = pageW - margin * 2;
+    // Axis baseline
+    doc.setDrawColor(...BRAND.line);
+    doc.line(chartX, chartY + chartH, chartX + chartW, chartY + chartH);
+
+    const n = data.forecast.length;
+    const slotW = chartW / n;
+    const barW = Math.min(14, slotW * 0.55);
+    data.forecast.forEach((d, i) => {
+      const h = (d.rain_mm / maxRain) * (chartH - 8);
+      const cx = chartX + slotW * i + slotW / 2;
+      const bx = cx - barW / 2;
+      const by = chartY + chartH - Math.max(0.4, h);
+      doc.setFillColor(...BRAND.magenta);
+      doc.rect(bx, by, barW, Math.max(0.4, h), "F");
+      // Value
+      doc.setFont(BODY, "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...BRAND.ink);
+      doc.text(`${d.rain_mm.toFixed(1)}`, cx, by - 1.5, { align: "center" });
+      // Date label
+      doc.setTextColor(...BRAND.muted);
+      doc.text(shortDate(d.date), cx, chartY + chartH + 4, { align: "center" });
     });
-    y += 6;
+    y = chartY + chartH + 10;
   }
 
-  // ENSO detail
+  // ---- ENSO ----
   if (data.enso) {
-    if (y > pageH - 50) {
-      doc.addPage();
-      drawHeader();
-      y = 38;
-    }
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Estado del clima (ENSO / Nino Costero)", margin, y);
-    y += 5;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(60);
+    y = ensureSpace(y, 30);
+    y = sectionTitle("Estado del clima (ENSO / Nino Costero)", y);
+    doc.setFont(BODY, "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...BRAND.ink);
     const txt = doc.splitTextToSize(
       `${clean(data.enso.icen.label_es)}. ${clean(data.enso.icen.risk_es)}`,
       pageW - margin * 2
@@ -267,19 +351,12 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
     y += txt.length * 5 + 6;
   }
 
-  // Communities table
+  // ---- Communities ----
   if (data.communities?.length) {
-    if (y > pageH - 60) {
-      doc.addPage();
-      drawHeader();
-      y = 38;
-    }
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Comunidades monitoreadas", margin, y);
+    y = ensureSpace(y, 50);
+    y = sectionTitle("Comunidades monitoreadas", y);
     autoTable(doc, {
-      startY: y + 3,
+      startY: y,
       margin: { left: margin, right: margin },
       head: [["Comunidad", "NDVI", "NDWI", "EVI", "Estres", "Estado"]],
       body: data.communities.map((c) => [
@@ -290,112 +367,109 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
         `${(c.stress_probability * 100).toFixed(0)} %`,
         c.status,
       ]),
-      styles: { fontSize: 9, cellPadding: 2 },
-      headStyles: { fillColor: [20, 83, 45], textColor: 255 },
+      styles: { font: BODY, fontSize: 9, cellPadding: 2.5, lineColor: BRAND.line, lineWidth: 0.1 },
+      headStyles: { font: TITLE, fontStyle: "bold", fillColor: BRAND.green, textColor: 255 },
+      alternateRowStyles: { fillColor: [250, 247, 244] },
+      columnStyles: { 0: { fontStyle: "bold" } },
     });
     // @ts-expect-error
     y = doc.lastAutoTable.finalY + 8;
   }
 
-  // Crops
+  // ---- Crops ----
   if (data.crops?.length) {
     doc.addPage();
-    drawHeader();
-    y = 38;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(15);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Recomendaciones por cultivo", margin, y);
-    y += 8;
+    drawHeader(doc.getNumberOfPages());
+    y = 34;
+    y = sectionTitle("Recomendaciones por cultivo", y);
+
     data.crops.forEach((c) => {
-      const colors: Record<string, [number, number, number]> = {
-        green: [220, 252, 231],
-        yellow: [254, 243, 199],
-        red: [254, 226, 226],
+      const accents: Record<string, [number, number, number]> = {
+        green: BRAND.green,
+        yellow: BRAND.orange,
+        red: [200, 50, 50],
       };
-      const border: Record<string, [number, number, number]> = {
-        green: [34, 197, 94],
-        yellow: [245, 158, 11],
-        red: [239, 68, 68],
-      };
-      const bg = colors[c.severity] ?? [240, 240, 240];
-      const bd = border[c.severity] ?? [180, 180, 180];
+      const accent = accents[c.severity] ?? [150, 150, 150];
 
       const title = clean(c.title_es);
       const body = clean(c.body_es);
       const action = clean(c.action_es);
-      const titleLines = doc.splitTextToSize(title, pageW - margin * 2 - 8);
-      const bodyLines = doc.splitTextToSize(body, pageW - margin * 2 - 8);
-      const actionLines = doc.splitTextToSize(`Accion: ${action}`, pageW - margin * 2 - 8);
-      const blockH = 8 + titleLines.length * 5 + bodyLines.length * 4.5 + actionLines.length * 4.5 + 6;
+      const titleLines = doc.splitTextToSize(title, pageW - margin * 2 - 12);
+      const bodyLines = doc.splitTextToSize(body, pageW - margin * 2 - 12);
+      const actionLines = doc.splitTextToSize(action, pageW - margin * 2 - 22);
+      const blockH =
+        10 + titleLines.length * 5 + bodyLines.length * 4.5 + actionLines.length * 4.5 + 10;
 
-      if (y + blockH > pageH - 20) {
-        doc.addPage();
-        drawHeader();
-        y = 38;
-      }
-      doc.setFillColor(...bg);
-      doc.setDrawColor(...bd);
-      doc.roundedRect(margin, y, pageW - margin * 2, blockH, 2.5, 2.5, "FD");
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(20, 30, 50);
-      doc.text(`${c.crop.toUpperCase()}`, margin + 4, y + 6);
+      y = ensureSpace(y, blockH + 4);
+
+      // Card background
+      doc.setFillColor(252, 250, 247);
+      doc.setDrawColor(...BRAND.line);
+      doc.setLineWidth(0.2);
+      doc.roundedRect(margin, y, pageW - margin * 2, blockH, 2, 2, "FD");
+      // Color rail
+      doc.setFillColor(...accent);
+      doc.rect(margin, y, 3, blockH, "F");
+
+      // Crop tag
+      doc.setFont(TITLE, "bold");
       doc.setFontSize(10);
-      doc.text(titleLines, margin + 4, y + 12);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(60);
-      doc.text(bodyLines, margin + 4, y + 12 + titleLines.length * 5);
-      doc.setFont("helvetica", "bold");
-      doc.text(
-        actionLines,
-        margin + 4,
-        y + 12 + titleLines.length * 5 + bodyLines.length * 4.5 + 2
-      );
-      y += blockH + 4;
+      doc.setTextColor(...accent);
+      doc.text(c.crop.toUpperCase(), margin + 7, y + 7);
+
+      doc.setFont(TITLE, "bold");
+      doc.setFontSize(11.5);
+      doc.setTextColor(...BRAND.ink);
+      doc.text(titleLines, margin + 7, y + 13);
+
+      doc.setFont(BODY, "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(...BRAND.ink);
+      const bodyY = y + 13 + titleLines.length * 5 + 1;
+      doc.text(bodyLines, margin + 7, bodyY);
+
+      const actionY = bodyY + bodyLines.length * 4.5 + 4;
+      doc.setFont(TITLE, "italic");
+      doc.setFontSize(9.5);
+      doc.setTextColor(...accent);
+      doc.text("Accion:", margin + 7, actionY);
+      doc.setFont(BODY, "normal");
+      doc.setTextColor(...BRAND.ink);
+      doc.text(actionLines, margin + 22, actionY);
+
+      y += blockH + 5;
     });
   }
 
-  // Alerts
+  // ---- Alerts ----
   if (data.alerts?.length) {
-    if (y > pageH - 60) {
-      doc.addPage();
-      drawHeader();
-      y = 38;
-    } else {
-      y += 4;
-    }
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Avisos activos", margin, y);
+    y = ensureSpace(y, 40);
+    y = sectionTitle("Avisos activos", y);
     autoTable(doc, {
-      startY: y + 3,
+      startY: y,
       margin: { left: margin, right: margin },
       head: [["Nivel", "Titulo", "Mensaje"]],
       body: data.alerts.map((a) => [a.level.toUpperCase(), clean(a.title), clean(a.message)]),
-      styles: { fontSize: 9, cellPadding: 2.5 },
-      headStyles: { fillColor: [120, 53, 15], textColor: 255 },
-      columnStyles: { 0: { cellWidth: 22, fontStyle: "bold" }, 1: { cellWidth: 50 } },
+      styles: { font: BODY, fontSize: 9, cellPadding: 3, lineColor: BRAND.line, lineWidth: 0.1 },
+      headStyles: { font: TITLE, fontStyle: "bold", fillColor: BRAND.orange, textColor: 255 },
+      alternateRowStyles: { fillColor: [250, 247, 244] },
+      columnStyles: { 0: { cellWidth: 24, fontStyle: "bold" }, 1: { cellWidth: 52 } },
     });
+    // @ts-expect-error
+    y = doc.lastAutoTable.finalY + 8;
   }
 
-  // Timeseries summary
+  // ---- Timeseries summary ----
   if (data.timeseries?.length) {
     doc.addPage();
-    drawHeader();
-    y = 38;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(15);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Serie temporal de estres por comunidad", margin, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
+    drawHeader(doc.getNumberOfPages());
+    y = 34;
+    y = sectionTitle("Serie temporal de estres por comunidad", y);
+    doc.setFont(BODY, "normal");
     doc.setFontSize(9);
-    doc.setTextColor(80);
+    doc.setTextColor(...BRAND.muted);
     doc.text(
-      "Promedio, minimo y maximo de probabilidad de estres hidrico observados (Sentinel-2 + IA).",
+      "Promedio, minimo y maximo de probabilidad de estres hidrico (Sentinel-2 + IA).",
       margin,
       y
     );
@@ -413,17 +487,19 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
           s.name,
           String(s.data.length),
           `${(avg(stress) * 100).toFixed(0)} %`,
-          `${(Math.min(...stress) * 100).toFixed(0)} %`,
-          `${(Math.max(...stress) * 100).toFixed(0)} %`,
+          stress.length ? `${(Math.min(...stress) * 100).toFixed(0)} %` : "—",
+          stress.length ? `${(Math.max(...stress) * 100).toFixed(0)} %` : "—",
           avg(ndvi).toFixed(3),
         ];
       }),
-      styles: { fontSize: 9, cellPadding: 2 },
-      headStyles: { fillColor: [20, 83, 45], textColor: 255 },
+      styles: { font: BODY, fontSize: 9, cellPadding: 2.5, lineColor: BRAND.line, lineWidth: 0.1 },
+      headStyles: { font: TITLE, fontStyle: "bold", fillColor: BRAND.magenta, textColor: 255 },
+      alternateRowStyles: { fillColor: [250, 247, 244] },
+      columnStyles: { 0: { fontStyle: "bold" } },
     });
   }
 
-  // Footer on every page
+  // Footers
   const total = doc.getNumberOfPages();
   for (let i = 1; i <= total; i++) {
     doc.setPage(i);

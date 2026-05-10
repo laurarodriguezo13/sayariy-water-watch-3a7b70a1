@@ -40,9 +40,25 @@ const BRAND = {
 // Strip emoji and characters jsPDF default fonts cannot render.
 const clean = (s: string | undefined) =>
   (s ?? "")
+    // Pictographic emoji ranges
     .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}]/gu, "")
+    // Variation selectors, ZWJ, regional indicators, combining marks leftovers
+    .replace(/[\u{FE00}-\u{FE0F}\u{200D}\u{20D0}-\u{20FF}]/gu, "")
+    // Bullets and other symbols Times can't render cleanly
+    .replace(/[\u2022\u25CF\u25AA\u25A0]/g, "-")
     .replace(/\s+/g, " ")
     .trim();
+
+const CROP_LABELS: Record<string, string> = {
+  maracuya: "MARACUYÁ",
+  camote: "CAMOTE",
+  frijol: "FRIJOL",
+  maiz: "MAÍZ",
+  _suggestion: "SUGERENCIA",
+  suggestion: "SUGERENCIA",
+};
+const cropLabel = (c: string) =>
+  CROP_LABELS[c?.toLowerCase?.() ?? ""] ?? clean(c).toUpperCase();
 
 // Use Times for titles (formal serif, embedded, renders cleanly).
 // Helvetica bold has letter-spacing bugs in jsPDF — avoid it.
@@ -415,7 +431,7 @@ export async function generateReportPdf(data: ReportData): Promise<void> {
       doc.setFont(TITLE, "bold");
       doc.setFontSize(10);
       doc.setTextColor(...accent);
-      doc.text(c.crop.toUpperCase(), margin + 7, y + 7);
+      doc.text(cropLabel(c.crop), margin + 7, y + 7);
 
       doc.setFont(TITLE, "bold");
       doc.setFontSize(11.5);

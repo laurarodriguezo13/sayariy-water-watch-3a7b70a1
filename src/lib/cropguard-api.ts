@@ -18,10 +18,40 @@ async function get<T>(path: string): Promise<T> {
     if (!res.ok) throw new Error(`CropGuard API ${path} → ${res.status}`);
     const json = await res.json();
     if (!json.ok) throw new Error(json.error ?? "API error");
+    // Backend signals when it had to use its own static fallback (upstream down).
+    // Bubble up so callers can substitute a live client-side source.
+    if (json.source === "fallback") throw new Error("backend_fallback");
     return json.data as T;
   } finally {
     clearTimeout(timer);
   }
+}
+
+// Cayaltí, Lambayeque
+const CAYALTI = { lat: -6.8939, lon: -79.5536 };
+
+async function fetchOpenMeteoForecast(): Promise<ForecastDay[]> {
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${CAYALTI.lat}&longitude=${CAYALTI.lon}` +
+    `&daily=precipitation_sum,et0_fao_evapotranspiration,relative_humidity_2m_max,relative_humidity_2m_min,` +
+    `shortwave_radiation_sum,temperature_2m_max,temperature_2m_min,weather_code` +
+    `&timezone=America%2FLima&forecast_days=7`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`open-meteo ${res.status}`);
+  const j = await res.json();
+  const d = j.daily;
+  return d.time.map((date: string, i: number) => ({
+    date,
+    rain_mm: d.precipitation_sum[i] ?? 0,
+    et0_mm: d.et0_fao_evapotranspiration[i] ?? 0,
+    rh_max_pct: d.relative_humidity_2m_max[i] ?? 0,
+    rh_min_pct: d.relative_humidity_2m_min[i] ?? 0,
+    solar_rad_mj: d.shortwave_radiation_sum[i] ?? 0,
+    tmax_c: d.temperature_2m_max[i] ?? 0,
+    tmin_c: d.temperature_2m_min[i] ?? 0,
+    weather_code: d.weather_code[i] ?? 0,
+    emoji: "",
+  }));
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -221,7 +251,9 @@ export const fetchWell = () =>
   get<WellData>("/well").catch(() => FALLBACK_WELL);
 
 export const fetchForecast = () =>
-  get<ForecastDay[]>("/forecast").catch(() => FALLBACK_FORECAST);
+  get<ForecastDay[]>("/forecast")
+    .catch(() => fetchOpenMeteoForecast())
+    .catch(() => FALLBACK_FORECAST);
 
 export const fetchEnso = () =>
   get<EnsoData>("/enso").catch(() => FALLBACK_ENSO);

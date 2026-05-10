@@ -14,6 +14,7 @@ import { CommunityMap } from "@/components/community-map";
 import { NdviMap } from "@/components/ndvi-map";
 import { StressTimeseries } from "@/components/stress-timeseries";
 import { useCommunities, useCrops, useEnso, useAllTimeseries } from "@/hooks/use-cropguard";
+import { ReportDownloadButton } from "@/components/report-download-button";
 import type { CropRec } from "@/lib/cropguard-api";
 
 export const Route = createFileRoute("/cultivos")({

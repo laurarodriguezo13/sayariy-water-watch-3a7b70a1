@@ -106,7 +106,8 @@ function ComunidadDetail() {
                 <RLineChart data={chartData} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="week" stroke="var(--color-muted-foreground)" fontSize={10} interval={4} />
-                  <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
+                  <YAxis yAxisId={0} stroke="var(--color-muted-foreground)" fontSize={12} domain={[0, 1]} />
+                  <YAxis yAxisId={1} orientation="right" stroke="var(--color-muted-foreground)" fontSize={12} domain={[0, 100]} />
                   <Tooltip
                     contentStyle={{
                       background: "var(--color-card)",

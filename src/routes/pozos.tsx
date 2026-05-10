@@ -98,46 +98,76 @@ function WellCard({
 
 // ── Rain week card ────────────────────────────────────────────────────────────
 
-function RainCard({ days }: { days: ForecastDay[] }) {
+function RainCard({ days, history }: { days: ForecastDay[]; history?: RainHistoryDay[] }) {
   const totalRain = days.reduce((s, d) => s + d.rain_mm, 0);
   const rainDays = days.filter((d) => d.rain_mm > 1).length;
+  const past = history ?? [];
+  const pastTotal = past.reduce((s, d) => s + d.rain_mm, 0);
+
+  const renderRow = (date: string, rain: number, accent: "past" | "future") => {
+    const d = new Date(date + "T12:00:00");
+    const dayName = d.toLocaleDateString("es-PE", { weekday: "long" });
+    const dayNum = d.toLocaleDateString("es-PE", { day: "2-digit", month: "short" });
+    const barW = Math.min(100, (rain / 20) * 100);
+    return (
+      <div key={`${accent}-${date}`} className="flex items-center gap-3">
+        <span className="w-28 text-xs font-medium text-muted-foreground capitalize">
+          {dayName} <span className="text-[10px] opacity-70">{dayNum}</span>
+        </span>
+        <div className="flex-1 h-4 rounded-full bg-secondary/60 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${
+              accent === "past" ? "bg-slate-400" : "bg-blue-400"
+            }`}
+            style={{ width: `${barW}%` }}
+          />
+        </div>
+        <span className="w-14 text-xs tabular-nums text-right text-muted-foreground">
+          {rain.toFixed(1)} mm
+        </span>
+      </div>
+    );
+  };
 
   return (
     <div className="rounded-2xl border border-border/60 bg-card p-5">
       <h2 className="mb-4 text-xl font-bold text-foreground">🌧️ Lluvia esta semana</h2>
 
-      <div className="flex gap-6 mb-5">
+      <div className="flex flex-wrap gap-6 mb-5">
         <div>
-          <div className="text-4xl font-black tabular-nums text-foreground">{totalRain.toFixed(0)} mm</div>
-          <div className="text-xs text-muted-foreground">total esperado</div>
+          <div className="text-4xl font-black tabular-nums text-foreground">{totalRain.toFixed(1)} mm</div>
+          <div className="text-xs text-muted-foreground">próximos 7 días</div>
         </div>
         <div>
           <div className="text-4xl font-black tabular-nums text-foreground">{rainDays}</div>
           <div className="text-xs text-muted-foreground">días con lluvia</div>
         </div>
+        {past.length > 0 && (
+          <div>
+            <div className="text-4xl font-black tabular-nums text-muted-foreground">
+              {pastTotal.toFixed(1)} mm
+            </div>
+            <div className="text-xs text-muted-foreground">últimos 7 días</div>
+          </div>
+        )}
       </div>
 
-      {/* Daily rain bars */}
+      {past.length > 0 && (
+        <>
+          <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground mb-2">
+            Últimos 7 días
+          </p>
+          <div className="space-y-2 mb-4">
+            {past.map((d) => renderRow(d.date, d.rain_mm, "past"))}
+          </div>
+        </>
+      )}
+
+      <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground mb-2">
+        Pronóstico próximos 7 días
+      </p>
       <div className="space-y-2">
-        {days.map((d) => {
-          const date = new Date(d.date + "T12:00:00");
-          const dayName = date.toLocaleDateString("es-PE", { weekday: "long" });
-          const barW = Math.min(100, (d.rain_mm / 20) * 100);
-          return (
-            <div key={d.date} className="flex items-center gap-3">
-              <span className="w-24 text-xs font-medium text-muted-foreground capitalize">{dayName}</span>
-              <div className="flex-1 h-4 rounded-full bg-secondary/60 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-blue-400 transition-all"
-                  style={{ width: `${barW}%` }}
-                />
-              </div>
-              <span className="w-12 text-xs tabular-nums text-right text-muted-foreground">
-                {d.rain_mm.toFixed(1)} mm
-              </span>
-            </div>
-          );
-        })}
+        {days.map((d) => renderRow(d.date, d.rain_mm, "future"))}
       </div>
 
       {totalRain >= 5 && (

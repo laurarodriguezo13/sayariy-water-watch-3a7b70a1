@@ -138,6 +138,10 @@ function WeatherStrip({ days }: { days: ForecastDay[] }) {
                 {dayName}
               </span>
               <span className="text-2xl">{d.emoji}</span>
+              <div className="flex items-baseline gap-1 text-[11px] tabular-nums">
+                <span className="font-bold text-foreground">{Math.round(d.tmax_c)}°</span>
+                <span className="text-muted-foreground">{Math.round(d.tmin_c)}°</span>
+              </div>
               {d.rain_mm > 0.5 && (
                 <span className="text-[10px] font-medium text-blue-600">
                   {d.rain_mm.toFixed(0)}mm

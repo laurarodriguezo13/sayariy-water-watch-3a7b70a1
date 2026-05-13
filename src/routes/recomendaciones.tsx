@@ -34,6 +34,15 @@ const SEVERITY_LABEL: Record<string, string> = {
   red: "Riesgo alto",
 };
 
+const CROP_LABEL: Record<string, string> = {
+  _suggestion: "Recomendación",
+  suggestion: "Recomendación",
+  maracuya: "Maracuyá",
+  camote: "Camote",
+  frijol: "Frijol",
+  maiz: "Maíz",
+};
+
 function CropRecCard({ rec }: { rec: CropRec }) {
   const styles: Record<string, string> = {
     green: "bg-green-50 border-green-200",
@@ -55,7 +64,7 @@ function CropRecCard({ rec }: { rec: CropRec }) {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-base font-bold text-foreground">
           <span className="text-xl">{icons[rec.severity] ?? "🌱"}</span>
-          <span className="uppercase tracking-wide">{rec.crop}</span>
+          <span className="uppercase tracking-wide">{CROP_LABEL[(rec.crop ?? "").toLowerCase()] ?? rec.crop}</span>
         </div>
         <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase ${accent[rec.severity] ?? "bg-muted text-foreground"}`}>
           {SEVERITY_LABEL[rec.severity] ?? rec.severity}

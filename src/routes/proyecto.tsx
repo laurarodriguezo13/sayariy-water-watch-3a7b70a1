@@ -40,7 +40,7 @@ function ProyectoPage() {
           <img
             src={tuberiaImg}
             alt="Vecinos de la comunidad caminan junto a la tubería principal recién instalada en Cayaltí, Lambayeque."
-            className="w-full"
+            className="aspect-[16/9] w-full object-cover"
             loading="lazy"
           />
           <figcaption className="bg-muted/40 px-4 py-3 text-xs text-muted-foreground">

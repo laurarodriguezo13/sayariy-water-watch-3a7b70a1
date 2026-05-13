@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
+import heroImg from "@/assets/proyecto-hero-satelital.jpg";
 import pozoImg from "@/assets/proyecto-pozo-construccion.jpg";
 import zanjaImg from "@/assets/proyecto-zanja-tendido.jpg";
-import tuberiaImg from "@/assets/proyecto-tubería-comunidad.jpg";
 import geofisicaImg from "@/assets/proyecto-geofisica.jpg";
 
 export const Route = createFileRoute("/proyecto")({

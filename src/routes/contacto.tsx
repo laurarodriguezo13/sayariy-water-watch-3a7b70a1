@@ -40,13 +40,13 @@ function ContactoPage() {
             </div>
           </a>
           <a
-            href="mailto:contacto@sayariyperu.org"
+            href="mailto:info@sayariyperu.org"
             className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-5 hover:border-primary/50"
           >
             <Mail className="h-5 w-5 text-primary" />
             <div>
               <div className="text-sm font-semibold text-foreground">Correo</div>
-              <div className="text-sm text-muted-foreground">contacto@sayariyperu.org</div>
+              <div className="text-sm text-muted-foreground">info@sayariyperu.org</div>
             </div>
           </a>
           <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-5 sm:col-span-2">

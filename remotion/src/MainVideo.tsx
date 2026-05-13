@@ -48,7 +48,7 @@ export const MainVideo: React.FC = () => {
             ]}
             accentColor={COLORS.magenta}
             panFrom={0}
-            panTo={-200}
+            panTo={-40}
           />
         </TransitionSeries.Sequence>
 
@@ -69,7 +69,7 @@ export const MainVideo: React.FC = () => {
             ]}
             accentColor="#3682dc"
             panFrom={0}
-            panTo={-150}
+            panTo={-30}
           />
         </TransitionSeries.Sequence>
 
@@ -90,7 +90,7 @@ export const MainVideo: React.FC = () => {
             ]}
             accentColor={COLORS.green}
             panFrom={0}
-            panTo={-300}
+            panTo={-40}
           />
         </TransitionSeries.Sequence>
 
@@ -111,7 +111,7 @@ export const MainVideo: React.FC = () => {
             ]}
             accentColor={COLORS.orange}
             panFrom={0}
-            panTo={-200}
+            panTo={-30}
           />
         </TransitionSeries.Sequence>
 

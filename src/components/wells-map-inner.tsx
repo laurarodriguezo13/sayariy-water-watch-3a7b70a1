@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 
 const POZO1: [number, number] = [-79.516392, -6.916094]; // [lng, lat]
-const POZO2: [number, number] = [-79.516274, -6.915342];
+const POZO2: [number, number] = [-79.515000, -6.916556];
 
 export default function WellsMapInner() {
   const containerRef = useRef<HTMLDivElement>(null);

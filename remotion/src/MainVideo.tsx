@@ -16,12 +16,13 @@ const D_POZOS = 130;
 const D_CULTIVOS = 130;
 const D_RECS = 140;
 const D_PDF = 170;
+const D_PDF_TECH = 170;
 const D_OUTRO = 130;
 const T = 16;
-const N_TRANS = 6;
+const N_TRANS = 7;
 
 export const DURATION =
-  D_INTRO + D_CAMPO + D_POZOS + D_CULTIVOS + D_RECS + D_PDF + D_OUTRO - N_TRANS * T;
+  D_INTRO + D_CAMPO + D_POZOS + D_CULTIVOS + D_RECS + D_PDF + D_PDF_TECH + D_OUTRO - N_TRANS * T;
 
 export const MainVideo: React.FC = () => {
   return (
@@ -118,7 +119,13 @@ export const MainVideo: React.FC = () => {
         <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: T })} />
 
         <TransitionSeries.Sequence durationInFrames={D_PDF}>
-          <ScenePdf />
+          <ScenePdf variant="simple" />
+        </TransitionSeries.Sequence>
+
+        <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: T })} />
+
+        <TransitionSeries.Sequence durationInFrames={D_PDF_TECH}>
+          <ScenePdf variant="technical" />
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition presentation={wipe({ direction: "from-bottom" })} timing={springTiming({ config: { damping: 200 }, durationInFrames: T })} />

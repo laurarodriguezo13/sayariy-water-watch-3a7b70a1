@@ -35,7 +35,6 @@ function ndviLabel(v: number): string {
 function CommunityCardItem({ c }: { c: Community }) {
   const dot = statusDot(c.status, c.stress_probability);
   const ring = statusRing(c.status, c.stress_probability);
-  const label = statusLabel(c.status, c.stress_probability);
   const ndviPct = Math.min(100, Math.max(0, c.ndvi * 100));
   const stressPct = Math.round(c.stress_probability * 100);
 
@@ -50,10 +49,7 @@ function CommunityCardItem({ c }: { c: Community }) {
 
       {/* Content */}
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="truncate font-bold text-foreground">{c.name}</p>
-          <span className="flex-shrink-0 text-xs text-muted-foreground">{label}</span>
-        </div>
+        <p className="truncate font-bold text-foreground">{c.name}</p>
         <p className="text-xs text-muted-foreground">{c.province}</p>
 
         {/* NDVI progress bar */}
@@ -107,9 +103,7 @@ function SkeletonCard() {
 
 export function CommunityMap({ communities }: CommunityMapProps) {
   const sorted = communities
-    ? [...communities]
-        .filter((c) => c.status !== "no_data" && c.status !== "watch" && c.stress_probability <= 0.4)
-        .sort((a, b) => b.stress_probability - a.stress_probability)
+    ? [...communities].sort((a, b) => b.stress_probability - a.stress_probability)
     : null;
 
   return (

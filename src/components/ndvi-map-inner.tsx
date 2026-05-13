@@ -70,52 +70,74 @@ const FILL_ID = "communities-fill";
 const LINE_ID = "communities-line";
 
 function buildFC(communities: Community[], index: Props["index"]): GeoJSON.FeatureCollection {
-  return {
-    type: "FeatureCollection",
-    features: communities
-      .map((c) => {
-        const coords = COMMUNITY_COORDS[c.id];
-        if (!coords) return null;
-        const [lng, lat] = coords;
-        const color =
-          index === "ndwi"
-            ? ndwiColor(c.ndwi)
-            : index === "stress"
-            ? stressColor(c.stress_probability)
-            : ndviColor(c.ndvi);
-        const val =
-          index === "ndwi"
-            ? c.ndwi.toFixed(3)
-            : index === "stress"
-            ? `${Math.round(c.stress_probability * 100)}%`
-            : c.ndvi.toFixed(3);
-        const label = index === "ndwi" ? "NDWI" : index === "stress" ? "Estrés" : "NDVI";
-        return {
+  const features: GeoJSON.Feature[] = [];
+  for (const c of communities) {
+    const coords = COMMUNITY_COORDS[c.id];
+    if (!coords) continue;
+    const color =
+      index === "ndwi" ? ndwiColor(c.ndwi)
+      : index === "stress" ? stressColor(c.stress_probability)
+      : ndviColor(c.ndvi);
+    const val =
+      index === "ndwi" ? c.ndwi.toFixed(3)
+      : index === "stress" ? `${Math.round(c.stress_probability * 100)}%`
+      : c.ndvi.toFixed(3);
+    const label = index === "ndwi" ? "NDWI" : index === "stress" ? "Estrés" : "NDVI";
+    const baseProps = {
+      id: c.id,
+      name: c.name,
+      color,
+      label,
+      val,
+      ndvi: c.ndvi.toFixed(3),
+      ndwi: c.ndwi.toFixed(3),
+      stress: `${Math.round(c.stress_probability * 100)}%`,
+      parcel: "",
+      hectares: "",
+    };
+
+    if (c.id === "cayalti") {
+      for (const p of CAYALTI_PARCELS) {
+        const h = parcelHalfDeg(p.hectares);
+        features.push({
           type: "Feature",
           properties: {
-            id: c.id,
-            name: c.name,
-            color,
-            label,
-            val,
-            ndvi: c.ndvi.toFixed(3),
-            ndwi: c.ndwi.toFixed(3),
-            stress: `${Math.round(c.stress_probability * 100)}%`,
+            ...baseProps,
+            name: `${c.name} — ${p.crop}`,
+            parcel: p.crop,
+            hectares: `${p.hectares} ha`,
           },
           geometry: {
             type: "Polygon",
             coordinates: [[
-              [lng - HALF, lat - HALF],
-              [lng + HALF, lat - HALF],
-              [lng + HALF, lat + HALF],
-              [lng - HALF, lat + HALF],
-              [lng - HALF, lat - HALF],
+              [p.lng - h, p.lat - h],
+              [p.lng + h, p.lat - h],
+              [p.lng + h, p.lat + h],
+              [p.lng - h, p.lat + h],
+              [p.lng - h, p.lat - h],
             ]],
           },
-        } as GeoJSON.Feature;
-      })
-      .filter((f): f is GeoJSON.Feature => f !== null),
-  };
+        });
+      }
+    } else {
+      const [lng, lat] = coords;
+      features.push({
+        type: "Feature",
+        properties: baseProps,
+        geometry: {
+          type: "Polygon",
+          coordinates: [[
+            [lng - HALF, lat - HALF],
+            [lng + HALF, lat - HALF],
+            [lng + HALF, lat + HALF],
+            [lng - HALF, lat + HALF],
+            [lng - HALF, lat - HALF],
+          ]],
+        },
+      });
+    }
+  }
+  return { type: "FeatureCollection", features };
 }
 
 export default function NdviMapInner({ communities, index }: Props) {

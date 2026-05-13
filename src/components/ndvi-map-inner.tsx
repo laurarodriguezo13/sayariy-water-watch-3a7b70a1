@@ -194,10 +194,11 @@ export default function NdviMapInner({ communities, index }: Props) {
         const f = e.features?.[0];
         if (!f) return;
         const p = f.properties as Record<string, string>;
+        const parcelLine = p.parcel ? `<br/><em>${p.parcel} · ${p.hectares}</em>` : "";
         new maplibregl.Popup()
           .setLngLat(e.lngLat)
           .setHTML(
-            `<strong>${p.name}</strong><br/>${p.label}: <strong>${p.val}</strong><br/>NDVI: ${p.ndvi} · NDWI: ${p.ndwi}<br/>Estrés: ${p.stress}`
+            `<strong>${p.name}</strong>${parcelLine}<br/>${p.label}: <strong>${p.val}</strong><br/>NDVI: ${p.ndvi} · NDWI: ${p.ndwi}<br/>Estrés: ${p.stress}`
           )
           .addTo(map);
       });

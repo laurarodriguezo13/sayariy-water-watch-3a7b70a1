@@ -108,7 +108,7 @@ function SkeletonCard() {
 export function CommunityMap({ communities }: CommunityMapProps) {
   const sorted = communities
     ? [...communities]
-        .filter((c) => c.status !== "no_data" && c.status !== "watch" && c.stress_probability <= 0.6)
+        .filter((c) => c.status !== "no_data" && c.status !== "watch" && c.stress_probability <= 0.4)
         .sort((a, b) => b.stress_probability - a.stress_probability)
     : null;
 

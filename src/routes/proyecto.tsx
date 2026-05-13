@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site-shell";
+import heroImg from "@/assets/proyecto-hero-satelital.jpg";
 import pozoImg from "@/assets/proyecto-pozo-construccion.jpg";
 import zanjaImg from "@/assets/proyecto-zanja-tendido.jpg";
-import tuberiaImg from "@/assets/proyecto-tubería-comunidad.jpg";
 import geofisicaImg from "@/assets/proyecto-geofisica.jpg";
 
 export const Route = createFileRoute("/proyecto")({
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/proyecto")({
           "CropGuard nace de la alianza entre Sayariy Resurgiendo y ESADE para integrar inteligencia satelital con el sistema hídrico solar de las comunidades del norte de Perú.",
       },
       { property: "og:title", content: "El proyecto · Sayariy CropGuard" },
-      { property: "og:image", content: tuberiaImg },
+      { property: "og:image", content: heroImg },
     ],
   }),
   component: ProyectoPage,
@@ -38,14 +38,14 @@ function ProyectoPage() {
 
         <figure className="mt-10 overflow-hidden rounded-lg border border-border">
           <img
-            src={tuberiaImg}
-            alt="Vecinos de la comunidad caminan junto a la tubería principal recién instalada en Cayaltí, Lambayeque."
+            src={heroImg}
+            alt="Vista aérea de campos de cultivo en Lambayeque con un canal de riego iluminado al atardecer y una sutil malla de datos satelitales superpuesta."
             className="aspect-[16/9] w-full object-cover"
             loading="lazy"
           />
           <figcaption className="bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
-            Tendido de la red principal de distribución desde el pozo Sayariy hacia las viviendas
-            de la comunidad — Cayaltí, Lambayeque.
+            Vista conceptual del enfoque CropGuard: agua, cultivos y datos satelitales sobre los
+            valles de la costa norte del Perú.
           </figcaption>
         </figure>
 

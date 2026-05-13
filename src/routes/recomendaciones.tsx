@@ -34,6 +34,15 @@ const SEVERITY_LABEL: Record<string, string> = {
   red: "Riesgo alto",
 };
 
+const CROP_LABEL: Record<string, string> = {
+  _suggestion: "Recomendación",
+  suggestion: "Recomendación",
+  maracuya: "Maracuyá",
+  camote: "Camote",
+  frijol: "Frijol",
+  maiz: "Maíz",
+};
+
 function CropRecCard({ rec }: { rec: CropRec }) {
   const styles: Record<string, string> = {
     green: "bg-green-50 border-green-200",

@@ -42,7 +42,7 @@ export const SceneAppTour: React.FC<Props> = ({
   const frameY = interpolate(frameSp, [0, 1], [80, 0]);
   const frameScale = interpolate(frameSp, [0, 1], [0.92, 1]);
 
-  // Pan screenshot
+  // Subtle pan (most screenshots fit fully now)
   const pan = interpolate(frame, [10, 130], [panFrom, panTo], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   return (
@@ -105,10 +105,13 @@ export const SceneAppTour: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Right browser frame */}
+      {/* Right browser frame — sized to screenshot aspect ratio so no blank space */}
       <div style={{
-        position: "absolute", right: 90, top: 100, bottom: 100,
+        position: "absolute", right: 90, top: "50%",
         width: 980,
+        // 1246/762 image + 44px title bar => ~644px tall
+        height: 644,
+        marginTop: -322,
         opacity: frameOp,
         transform: `translateY(${frameY}px) scale(${frameScale})`,
         transformOrigin: "center",

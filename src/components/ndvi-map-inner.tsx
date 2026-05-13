@@ -5,7 +5,7 @@ import type { Community } from "@/lib/cropguard-api";
 
 const COMMUNITY_COORDS: Record<string, [number, number]> = {
   // [lng, lat]
-  "cayalti":        [-79.516, -6.916],
+  "cayalti":        [-79.5160, -6.9160],
   "victor-raul":    [-79.836, -6.775],
   "monsefu":        [-79.870, -6.892],
   "reque":          [-79.828, -6.878],
@@ -13,6 +13,30 @@ const COMMUNITY_COORDS: Record<string, [number, number]> = {
 };
 
 const HALF = 0.012;
+
+// Real parcels in Las Lomas de Cayaltí (Sayariy field sites)
+// Coordinates from ground-truth GPS survey (Nov 2025).
+type Parcel = {
+  id: string;
+  crop: string;
+  hectares: number;
+  lng: number;
+  lat: number;
+};
+const CAYALTI_PARCELS: Parcel[] = [
+  { id: "p-maracuya",  crop: "Maracuyá",            hectares: 3.5, lat: -6.917167, lng: -79.515056 },
+  { id: "p-frutales",  crop: "Frutales (pitahaya, naranja, mandarina, coco, uvas)", hectares: 3.0, lat: -6.913444, lng: -79.515028 },
+  { id: "p-frijol",    crop: "Frijol",              hectares: 1.5, lat: -6.912889, lng: -79.514806 },
+  { id: "p-papaya",    crop: "Papaya (Fundo Victoria)", hectares: 4.0, lat: -6.922750, lng: -79.516917 },
+  { id: "p-cacao-maiz", crop: "Cacao y Maíz",       hectares: 3.0, lat: -6.916278, lng: -79.518111 },
+];
+
+// Approx half-side of a square parcel polygon in degrees, given hectares.
+// 1 ha = 10,000 m²; 1° lat ≈ 111,320 m → half = sqrt(ha*10000)/2 / 111320.
+function parcelHalfDeg(ha: number): number {
+  const sideM = Math.sqrt(ha * 10000);
+  return sideM / 2 / 111320;
+}
 
 function ndviColor(v: number): string {
   if (v >= 0.65) return "#2d6a2d";

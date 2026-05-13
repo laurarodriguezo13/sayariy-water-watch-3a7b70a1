@@ -30,6 +30,22 @@ async function get<T>(path: string): Promise<T> {
 // Cayaltí, Lambayeque
 const CAYALTI = { lat: -6.8939, lon: -79.5536 };
 
+// WMO weather code → emoji (Open-Meteo standard codes)
+function wmoEmoji(code: number): string {
+  if (code === 0) return "☀️";
+  if (code === 1) return "🌤️";
+  if (code === 2) return "⛅";
+  if (code === 3) return "☁️";
+  if (code === 45 || code === 48) return "🌫️";
+  if (code >= 51 && code <= 57) return "🌦️";
+  if (code >= 61 && code <= 67) return "🌧️";
+  if (code >= 71 && code <= 77) return "🌨️";
+  if (code >= 80 && code <= 82) return "🌧️";
+  if (code >= 85 && code <= 86) return "🌨️";
+  if (code >= 95) return "⛈️";
+  return "🌥️";
+}
+
 async function fetchOpenMeteoForecast(): Promise<ForecastDay[]> {
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${CAYALTI.lat}&longitude=${CAYALTI.lon}` +
@@ -40,18 +56,21 @@ async function fetchOpenMeteoForecast(): Promise<ForecastDay[]> {
   if (!res.ok) throw new Error(`open-meteo ${res.status}`);
   const j = await res.json();
   const d = j.daily;
-  return d.time.map((date: string, i: number) => ({
-    date,
-    rain_mm: d.precipitation_sum[i] ?? 0,
-    et0_mm: d.et0_fao_evapotranspiration[i] ?? 0,
-    rh_max_pct: d.relative_humidity_2m_max[i] ?? 0,
-    rh_min_pct: d.relative_humidity_2m_min[i] ?? 0,
-    solar_rad_mj: d.shortwave_radiation_sum[i] ?? 0,
-    tmax_c: d.temperature_2m_max[i] ?? 0,
-    tmin_c: d.temperature_2m_min[i] ?? 0,
-    weather_code: d.weather_code[i] ?? 0,
-    emoji: "",
-  }));
+  return d.time.map((date: string, i: number) => {
+    const code = d.weather_code[i] ?? 0;
+    return {
+      date,
+      rain_mm: d.precipitation_sum[i] ?? 0,
+      et0_mm: d.et0_fao_evapotranspiration[i] ?? 0,
+      rh_max_pct: d.relative_humidity_2m_max[i] ?? 0,
+      rh_min_pct: d.relative_humidity_2m_min[i] ?? 0,
+      solar_rad_mj: d.shortwave_radiation_sum[i] ?? 0,
+      tmax_c: d.temperature_2m_max[i] ?? 0,
+      tmin_c: d.temperature_2m_min[i] ?? 0,
+      weather_code: code,
+      emoji: wmoEmoji(code),
+    };
+  });
 }
 
 export interface RainHistoryDay {
